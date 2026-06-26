@@ -85,8 +85,29 @@ def get_l_factor(abc: str) -> float:
     return 1.0  # デフォルトは 1/4 とする
 
 
+def get_meter_beats(abc: str) -> float:
+    """
+    M:4/4 などのヘッダーから1小節あたりの基準拍数（L:1/4基準）を取得する。
+    デフォルトは 4.0 拍とする。
+    """
+    for line in abc.splitlines():
+        if line.strip().startswith("M:"):
+            val = line.split(":", 1)[1].strip()
+            if val == "C":
+                return 4.0
+            if val == "C|":
+                return 2.0
+            if "/" in val:
+                try:
+                    num, den = val.split("/")
+                    return (int(num) / int(den)) * 4.0
+                except Exception:
+                    pass
+    return 4.0
+
+
 def check_measure(abc: str) -> tuple[bool, str]:
-    """③ 拍子チェックフィルタ (小節ごとの合計拍数が 4拍 になっているか)"""
+    """③ 拍子チェックフィルタ (小節ごとの合計拍数が設定された拍子になっているか)"""
     music = []
     for line in abc.splitlines():
         # 行頭が英文字1文字＋コロンで始まる場合はヘッダー行（または歌詞行など）とみなして除外
@@ -103,6 +124,7 @@ def check_measure(abc: str) -> tuple[bool, str]:
     )
 
     factor = get_l_factor(abc)
+    target_beats = get_meter_beats(abc)
     measure_index = 0
 
     for bar in bars:
@@ -117,9 +139,13 @@ def check_measure(abc: str) -> tuple[bool, str]:
         for token in pattern.finditer(bar_clean):
             total += note_length(token.group()) * factor
 
-        # 4拍子 (4.0拍) であることを確認 (浮動小数点の誤差を考慮)
-        if abs(total - 4.0) > 0.001:
-            return False, f"{measure_index}小節目が{total}拍です"
+        # 最初の小節（弱起 - upbeat）は、拍数が1小節分以下であれば許容する
+        if measure_index == 1:
+            if total > target_beats + 0.001:
+                return False, f"1小節目（弱起）の拍数({total}拍)が指定拍子({target_beats}拍)を超えています"
+        else:
+            if abs(total - target_beats) > 0.001:
+                return False, f"{measure_index}小節目が{total}拍です (指定拍子: {target_beats}拍)"
 
     return True, "OK"
 

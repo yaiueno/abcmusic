@@ -79,3 +79,28 @@ for i, bar in enumerate(bars):
 
 print("Test 4 (Measure Error Result):", abc_validator.check_all(abc_err_measure))
 
+
+# 5. 3/4拍子のワルツ (M:3/4, 各小節 3拍)
+abc_waltz = """X:1
+T:Waltz Test
+M:3/4
+L:1/4
+Q:140
+K:G
+|: G2 B | d2 g | f2 a | g3 :|"""
+
+print("Test 5 (3/4 Waltz OK):", abc_validator.check_all(abc_waltz))
+
+
+# 6. 弱起 (1小節目が 2拍、残りは 4拍)
+abc_upbeat = """X:1
+T:Upbeat Test
+M:4/4
+L:1/4
+Q:120
+K:C
+E2 | C D E F | G3 A | G2 E2 | C4 |"""
+
+print("Test 6 (Upbeat/Pickup Measure OK):", abc_validator.check_all(abc_upbeat))
+
+
