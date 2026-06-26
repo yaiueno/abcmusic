@@ -112,9 +112,11 @@ def harmonize(req: HarmonizeRequest):
     abc_text = ""
     error_message = ""
     success = False
-    MAX_RETRY = 5
+    MAX_RETRY = 20
 
+    print(f"\n伴奏（ハーモニー）付与開始 (タイトル: '{req.title}', モデル: '{req.model}')")
     for attempt in range(MAX_RETRY):
+        print(f"\n[リトライ {attempt+1}/{MAX_RETRY}] LLMへ推論リクエスト送信中 ({req.model})...")
         response = client.chat(req.model, messages)
         if not response:
             error_message = "LLMからの応答を取得できませんでした。"
@@ -129,10 +131,12 @@ def harmonize(req: HarmonizeRequest):
                 "role": "user",
                 "content": "上記の応答にはABC記法の楽譜ブロック（```abc ... ```）が含まれていません。楽譜部分を必ず ```abc と ``` で囲んで再出力してください。"
             })
-            print(f"[{attempt+1}/{MAX_RETRY}] 伴奏付与失敗: 楽譜ブロック未検出。再生成指示を送信します。")
+            print(f"[{attempt+1}/{MAX_RETRY}] 伴奏付与失敗: 楽譜ブロック未検出。")
+            print(f"LLMの応答:\n{response}\n" + "="*40)
             continue
 
         temp_abc = abc_blocks[0]
+        print(f"[{attempt+1}/{MAX_RETRY}] 抽出された楽譜:\n{temp_abc}\n" + "-"*40)
 
         # フィルターによる全体チェック
         ok, msg = abc_validator.check_all(temp_abc)
