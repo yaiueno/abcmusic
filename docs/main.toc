@@ -1,0 +1,57 @@
+\contentsline {section}{\numberline {1}システム概要}{3}{section.1}%
+\contentsline {subsection}{\numberline {1.1}主な機能}{3}{subsection.1.1}%
+\contentsline {section}{\numberline {2}システムアーキテクチャ}{4}{section.2}%
+\contentsline {subsection}{\numberline {2.1}全体システム構成図}{4}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}ポート割り当て一覧}{4}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}主要データフロー}{4}{subsection.2.3}%
+\contentsline {subsubsection}{\numberline {2.3.1}自動作曲シーケンス}{5}{subsubsection.2.3.1}%
+\contentsline {subsubsection}{\numberline {2.3.2}MIDI・ABC相互変換シーケンス}{5}{subsubsection.2.3.2}%
+\contentsline {section}{\numberline {3}環境構築とセットアップ}{6}{section.3}%
+\contentsline {subsection}{\numberline {3.1}前提条件・必要環境}{6}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}依存関係のインストール}{6}{subsection.3.2}%
+\contentsline {subsubsection}{\numberline {3.2.1}1. Python バックエンドの依存関係}{6}{subsubsection.3.2.1}%
+\contentsline {subsubsection}{\numberline {3.2.2}2. Node.js MIDI サーバーの依存関係}{7}{subsubsection.3.2.2}%
+\contentsline {subsubsection}{\numberline {3.2.3}3. フロントエンド (React) の依存関係}{7}{subsubsection.3.2.3}%
+\contentsline {subsection}{\numberline {3.3}起動手順}{7}{subsection.3.3}%
+\contentsline {subsubsection}{\numberline {3.3.1}一括起動 (推奨)}{7}{subsubsection.3.3.1}%
+\contentsline {subsubsection}{\numberline {3.3.2}個別起動 (開発・デバッグ用)}{7}{subsubsection.3.3.2}%
+\contentsline {subsection}{\numberline {3.4}起動後のアクセス先URL}{8}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}設定の変更}{8}{subsection.3.5}%
+\contentsline {subsubsection}{\numberline {3.5.1}OllamaサーバーのIPアドレス設定}{8}{subsubsection.3.5.1}%
+\contentsline {section}{\numberline {4}システムの利用方法}{9}{section.4}%
+\contentsline {subsection}{\numberline {4.1}\faMagic \ 自動作曲タブ}{9}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}\faMusic \ ハーモニー付与タブ}{9}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}MIDI $\leftrightarrow $ ABC変換タブ}{9}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}\faComments \ AIチャットタブ}{9}{subsection.4.4}%
+\contentsline {section}{\numberline {5}APIリファレンス}{10}{section.5}%
+\contentsline {subsection}{\numberline {5.1}システム・ステータス系API}{10}{subsection.5.1}%
+\contentsline {subsubsection}{\numberline {5.1.1}\texttt {\color {brand-cyan}GET /api/health}}{10}{subsubsection.5.1.1}%
+\contentsline {subsubsection}{\numberline {5.1.2}\texttt {\color {brand-cyan}GET /api/models}}{11}{subsubsection.5.1.2}%
+\contentsline {subsection}{\numberline {5.2}自動作曲・ハーモニー付与API}{11}{subsection.5.2}%
+\contentsline {subsubsection}{\numberline {5.2.1}\texttt {\color {brand-cyan}POST /api/compose}}{11}{subsubsection.5.2.1}%
+\contentsline {subsubsection}{\numberline {5.2.2}\texttt {\color {brand-cyan}POST /api/harmonize}}{12}{subsubsection.5.2.2}%
+\contentsline {subsection}{\numberline {5.3}MIDI変換・編集API}{12}{subsection.5.3}%
+\contentsline {subsubsection}{\numberline {5.3.1}\texttt {\color {brand-cyan}POST /api/midi-to-abc}}{12}{subsubsection.5.3.1}%
+\contentsline {subsubsection}{\numberline {5.3.2}\texttt {\color {brand-cyan}POST /api/abc-to-midi}}{13}{subsubsection.5.3.2}%
+\contentsline {subsection}{\numberline {5.4}チャットAPI}{13}{subsection.5.4}%
+\contentsline {subsubsection}{\numberline {5.4.1}\texttt {\color {brand-cyan}POST /api/chat}}{13}{subsubsection.5.4.1}%
+\contentsline {section}{\numberline {6}Raspberry Pi 連携ガイド}{14}{section.6}%
+\contentsline {subsection}{\numberline {6.1}セットアップ手順}{14}{subsection.6.1}%
+\contentsline {subsubsection}{\numberline {6.1.1}1. 関連ファイルのコピー}{14}{subsubsection.6.1.1}%
+\contentsline {subsubsection}{\numberline {6.1.2}2. ラズパイ側での環境構築}{14}{subsubsection.6.1.2}%
+\contentsline {subsubsection}{\numberline {6.1.3}3. ホスト PC の IP アドレス設定}{14}{subsubsection.6.1.3}%
+\contentsline {subsubsection}{\numberline {6.1.4}4. ホスト PC での外部アクセス許可}{15}{subsubsection.6.1.4}%
+\contentsline {subsection}{\numberline {6.2}接続のテスト}{15}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}利用方法}{15}{subsection.6.3}%
+\contentsline {subsubsection}{\numberline {6.3.1}ABC 楽譜ファイルの直接演奏}{15}{subsubsection.6.3.1}%
+\contentsline {subsection}{\numberline {6.4}エイリアス一覧}{15}{subsection.6.4}%
+\contentsline {subsection}{\numberline {6.5}トラブルシューティング}{16}{subsection.6.5}%
+\contentsline {section}{\numberline {7}開発者向け設計詳細と拡張性}{16}{section.7}%
+\contentsline {subsection}{\numberline {7.1}疎結合設計の原則}{16}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}モジュール依存関係図}{17}{subsection.7.2}%
+\contentsline {section}{\numberline {8}ライセンスと品質保証・免責事項}{17}{section.8}%
+\contentsline {subsection}{\numberline {8.1}製品保証とサポートの範囲}{17}{subsection.8.1}%
+\contentsline {subsubsection}{\numberline {8.1.1}1. 動作保証環境}{18}{subsubsection.8.1.1}%
+\contentsline {subsubsection}{\numberline {8.1.2}2. 生成物（音楽データおよびテキスト）に関する責任}{18}{subsubsection.8.1.2}%
+\contentsline {subsection}{\numberline {8.2}責任の制限（免責事項）}{18}{subsection.8.2}%
+\contentsline {subsection}{\numberline {8.3}ライセンス規定}{19}{subsection.8.3}%

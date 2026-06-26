@@ -1,0 +1,17 @@
+{
+  "name": "abc-music-suite-midi-server",
+  "version": "2.0.0",
+  "description": "ABC Music Suite - MIDI変換サーバー (abc2midi wrapper)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@tonaljs/midi": "^4.10.2",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "midi-file": "^1.2.4",
+    "multer": "^2.2.0"
+  }
+}

@@ -1,0 +1,275 @@
+%===============================================================
+% ABC Music Suite 技術文書
+% メインファイル
+% コンパイル: latexmk -pdfdvi main.tex
+%           または: platex main && dvipdfmx main
+%===============================================================
+\documentclass[a4paper,11pt]{jlreq}
+
+%---------------------------------------------------------------
+% パッケージ
+%---------------------------------------------------------------
+\usepackage[dvipdfmx]{graphicx,xcolor}
+\usepackage{tikz}
+\usetikzlibrary{
+  shapes.geometric, arrows.meta, positioning, fit,
+  decorations.pathreplacing, calc, backgrounds,
+  shadows.blur, matrix, chains, trees
+}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{float}               % [H]の位置指定用
+
+\usepackage{listings}            % ソースコード
+\usepackage{tcolorbox}           % カラーボックス
+\tcbuselibrary{listings,skins,breakable,theorems}
+\usepackage{booktabs}            % 美しい表
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{geometry}
+\usepackage[dvipdfmx]{hyperref}
+\usepackage{fancyhdr}            % ヘッダ・フッタ
+\usepackage{titlesec}            % セクション見出し
+\usepackage{mdframed}
+\usepackage{amsmath}
+\usepackage{fontawesome5}        % アイコン（要 fontawesome5 パッケージ）
+\usepackage{pifont}
+\usepackage{array}
+\usepackage{dirtree}             % ディレクトリツリー
+
+%---------------------------------------------------------------
+% ページレイアウト
+%---------------------------------------------------------------
+\geometry{
+  top=25mm, bottom=25mm,
+  left=25mm, right=25mm,
+  headheight=29pt
+}
+\addtolength{\topmargin}{-14pt}
+
+%---------------------------------------------------------------
+% カラーパレット（システムのデザインに合わせたダークブランドカラー）
+%---------------------------------------------------------------
+\definecolor{brand-cyan}{RGB}{34,211,238}
+\definecolor{brand-purple}{RGB}{124,58,237}
+\definecolor{brand-green}{RGB}{74,222,128}
+\definecolor{brand-blue}{RGB}{96,165,250}
+\definecolor{bg-dark}{RGB}{11,17,32}
+\definecolor{bg-card}{RGB}{20,30,50}
+\definecolor{text-muted}{RGB}{148,163,184}
+\definecolor{accent-red}{RGB}{248,113,113}
+\definecolor{node-api}{RGB}{34,211,238}
+\definecolor{node-midi}{RGB}{74,222,128}
+\definecolor{node-ollama}{RGB}{167,139,250}
+\definecolor{node-ui}{RGB}{96,165,250}
+\definecolor{node-rpi}{RGB}{251,191,36}
+\definecolor{codebg}{RGB}{15,23,42}
+
+%---------------------------------------------------------------
+% セクション見出しスタイル
+%---------------------------------------------------------------
+\titleformat{\section}
+  {\Large\bfseries\color{brand-purple}}
+  {\thesection}{1em}{}[{\color{brand-cyan}\titlerule[1.5pt]}]
+
+\titleformat{\subsection}
+  {\large\bfseries\color{brand-cyan!80!black}}
+  {\thesubsection}{1em}{}
+
+\titleformat{\subsubsection}
+  {\normalsize\bfseries\color{brand-purple!70!black}}
+  {\thesubsubsection}{1em}{}
+
+%---------------------------------------------------------------
+% ソースコードスタイル
+%---------------------------------------------------------------
+\lstset{
+  basicstyle=\ttfamily\small\color{white},
+  keywordstyle=\color{brand-cyan}\bfseries,
+  commentstyle=\color{text-muted}\itshape,
+  stringstyle=\color{brand-green},
+  numbers=left,
+  numberstyle=\tiny\color{text-muted},
+  numbersep=8pt,
+  frame=single,
+  rulecolor=\color{brand-purple!40},
+  backgroundcolor=\color{codebg},
+  breaklines=true,
+  breakatwhitespace=true,
+  showstringspaces=false,
+  tabsize=4,
+  extendedchars=false
+}
+
+% Python用
+\lstdefinestyle{python}{
+  language=Python,
+  morekeywords={async,await,def,class,return,import,from,with}
+}
+
+% PowerShell用
+\lstdefinestyle{powershell}{
+  language=bash,
+  morekeywords={Write-Host,Start-Process,Set-Location,Test-Path,Copy-Item}
+}
+
+% ABC記法用
+\lstdefinestyle{abc}{
+  language={},
+  basicstyle=\ttfamily\small\color{brand-green},
+  backgroundcolor=\color{codebg},
+}
+
+%---------------------------------------------------------------
+% tcolorboxスタイル
+%---------------------------------------------------------------
+\tcbset{
+  mybox/.style={
+    enhanced,
+    colback=bg-card,
+    colframe=brand-purple!60,
+    fonttitle=\bfseries\color{white},
+    coltitle=white,
+    coltext=white,
+    attach boxed title to top left={yshift=-2mm,xshift=4mm},
+    boxed title style={
+      colback=brand-purple,
+      colframe=brand-purple,
+      rounded corners
+    }
+  },
+  tipbox/.style={
+    enhanced,
+    colback=brand-cyan!8,
+    colframe=brand-cyan!60,
+    leftrule=4pt,
+    sharp corners=west
+  },
+  warnbox/.style={
+    enhanced,
+    colback=accent-red!8,
+    colframe=accent-red!60,
+    leftrule=4pt,
+    sharp corners=west
+  },
+  notebox/.style={
+    enhanced,
+    colback=brand-green!8,
+    colframe=brand-green!60,
+    leftrule=4pt,
+    sharp corners=west
+  }
+}
+
+%---------------------------------------------------------------
+% ヘッダ・フッタ
+%---------------------------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{text-muted}ABC Music Suite --- 技術文書}
+\fancyhead[R]{\small\color{text-muted}\rightmark}
+\fancyfoot[C]{\small\color{text-muted}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{brand-purple!40}\leaders\hrule height \headrulewidth\hfill}}
+
+%---------------------------------------------------------------
+% ハイパーリンク
+%---------------------------------------------------------------
+\hypersetup{
+  colorlinks=true,
+  linkcolor=brand-purple,
+  urlcolor=brand-cyan,
+  citecolor=brand-green,
+  pdftitle={ABC Music Suite 技術文書},
+  pdfauthor={情報科学演習},
+  pdfsubject={ローカルLLM × 音楽生成システム}
+}
+
+%---------------------------------------------------------------
+% 便利コマンド
+%---------------------------------------------------------------
+\newcommand{\api}[1]{\texttt{\color{brand-cyan}#1}}
+\newcommand{\file}[1]{\texttt{\color{brand-green}#1}}
+\newcommand{\cmd}[1]{\texttt{\color{brand-purple}#1}}
+\newcommand{\port}[1]{\textbf{\color{brand-cyan}:#1}}
+\newcommand{\okmark}{\textcolor{brand-green}{\ding{52}}}
+\newcommand{\ngmark}{\textcolor{accent-red}{\ding{56}}}
+
+%===============================================================
+% ドキュメント本文
+%===============================================================
+\begin{document}
+
+%---------------------------------------------------------------
+% タイトルページ
+%---------------------------------------------------------------
+\begin{titlepage}
+  \begin{tikzpicture}[remember picture, overlay]
+    % 背景グラデーション風
+    \fill[bg-dark] (current page.south west) rectangle (current page.north east);
+    % 装飾円
+    \fill[brand-purple, opacity=0.15]
+      (current page.north west) + (3,-3) circle (6cm);
+    \fill[brand-cyan, opacity=0.10]
+      (current page.south east) + (-4,4) circle (5cm);
+    \fill[brand-purple, opacity=0.08]
+      (current page.center) + (0,2) circle (8cm);
+    % 上部ライン
+    \draw[brand-cyan, line width=2pt]
+      (current page.north west) + (2,-2) --
+      (current page.north east) + (-2,-2);
+    % 下部ライン
+    \draw[brand-purple, line width=2pt]
+      (current page.south west) + (2,2) --
+      (current page.south east) + (-2,2);
+  \end{tikzpicture}
+
+  \vspace*{3cm}
+  \begin{center}
+    {\fontsize{14}{18}\selectfont\color{brand-cyan}\texttt{ローカルLLM × 音楽生成システム}}\\[1em]
+    {\fontsize{40}{50}\selectfont\bfseries\color{white}ABC Music}\\[0.3em]
+    {\fontsize{40}{50}\selectfont\bfseries\color{brand-cyan}Suite}\\[0.5em]
+    {\color{brand-purple!70!white}\rule{12cm}{1.5pt}}\\[1.5em]
+    {\fontsize{16}{20}\selectfont\color{white}\bfseries 技術文書 v2.0}\\[0.8em]
+    {\color{text-muted}\large システム設計・構成・API仕様・セットアップガイド}\\[3cm]
+
+    \begin{tikzpicture}
+      \node[draw=brand-cyan, line width=1pt, rounded corners=8pt,
+            fill=bg-card, text=white,
+            minimum width=8cm, minimum height=1.5cm, font=\large\bfseries] {
+        ♪ \quad ABC Music Suite \quad ♪
+      };
+    \end{tikzpicture}
+
+    \vfill
+    {\color{text-muted}
+      情報科学演習 \quad $|$ \quad
+      2026年6月 \quad $|$ \quad
+      Powered by Ollama (ローカルLLM)
+    }
+  \end{center}
+\end{titlepage}
+
+%---------------------------------------------------------------
+% 目次
+%---------------------------------------------------------------
+{
+  \color{brand-purple!30}
+  \renewcommand{\contentsname}{目次}
+  \tableofcontents
+}
+\newpage
+
+%===============================================================
+\input{sections/01_overview}
+\input{sections/02_architecture}
+\input{sections/03_setup}
+\input{sections/04_usage}
+\input{sections/05_api}
+\input{sections/06_raspberry}
+\input{sections/07_developer}
+\input{sections/08_license}
+
+\end{document}

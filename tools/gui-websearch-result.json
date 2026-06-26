@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1135,
+    "role": "user",
+    "content_len": 8,
+    "thinking_len": 0,
+    "created_at": "2026-06-06 14:24:16.7603344+09:00"
+  },
+  {
+    "id": 1136,
+    "role": "assistant",
+    "content_len": 0,
+    "thinking_len": 5316,
+    "created_at": "2026-06-06 14:24:18.9909729+09:00"
+  },
+  {
+    "id": 1137,
+    "role": "tool",
+    "content_len": 123237,
+    "thinking_len": 0,
+    "created_at": "2026-06-06 14:25:17.5562043+09:00"
+  },
+  {
+    "tool_results_count": 5
+  },
+  {
+    "result": 0,
+    "title": "QwenLM/Qwen3.6",
+    "url": "https://github.com/QwenLM/Qwen3.6",
+    "content_preview": "# Repository: QwenLM/Qwen3.6\n\nQwen3.6 is the large language model series developed by Qwen team, Alibaba Group.\n\n- Stars: 3509\n- Forks: 233\n- Watchers: 28\n- Open issues: 19\n- License: Apache License 2"
+  },
+  {
+    "result": 1,
+    "title": "Qwen3.6 - How to Run Locally | Unsloth Documentation",
+    "url": "https://www.unsloth.ai/docs/models/qwen3.6",
+    "content_preview": "# Qwen3.6 - How to Run Locally\n\nQwen3.6 is Alibaba’s new family of multimodal hybrid-thinking models, including: Qwen3.6-27B and 35B-A3B. It delivers top performance for its size, supports 256K contex"
+  },
+  {
+    "result": 2,
+    "title": "Readme",
+    "url": "https://huggingface.co/Qwen/Qwen3.6-27B/raw/main/README.md",
+    "content_preview": "---\nlibrary_name: transformers\nlicense: apache-2.0\nlicense_link: https://huggingface.co/Qwen/Qwen3.6-27B/blob/main/LICENSE\npipeline_tag: image-text-to-text\n---\n\n# Qwen3.6-27B\n\n \n\n[![Qwen Chat](https:/"
+  }
+]

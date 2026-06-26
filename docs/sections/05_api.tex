@@ -1,0 +1,155 @@
+%===============================================================
+% 05_api.tex - APIリファレンス
+%===============================================================
+\section{APIリファレンス}
+
+本システムは、すべての制御を HTTP REST および Server-Sent Events (SSE) ベースの API を介して行います。バックエンド（FastAPI、ポート \port{8000}）が提供する主要なエンドポイントの仕様を以下に解説します。
+
+なお、サーバー起動後は \url{http://localhost:8000/docs} にアクセスすることで、Swagger UI からこれらすべての API をブラウザ上で直接対話的にテストできます。
+
+\subsection{システム・ステータス系API}
+
+\subsubsection{\texorpdfstring{\api{GET /api/health}}{GET /api/health}}
+システム全体の稼働状態および接続状況（Ollama、Node.js MIDI サーバー）を返します。
+
+\textbf{/api/health レスポンス例:}\\
+\begin{lstlisting}
+{
+  "status": "ok",
+  "ollama": {
+    "connected": true,
+    "url": "http://127.0.0.1:11434",
+    "model_count": 3
+  },
+  "midi_server": {
+    "connected": true,
+    "url": "http://127.0.0.1:3001"
+  }
+}
+\end{lstlisting}
+
+\subsubsection{\texorpdfstring{\api{GET /api/models}}{GET /api/models}}
+Ollama サーバーに現在インストールされており、利用可能なモデルの一覧を返します。
+\textbf{/api/models レスポンス例:}\\
+\begin{lstlisting}
+{
+  "models": ["qwen3.5:9b", "qwen2.5-coder:7b"],
+  "base_url": "http://127.0.0.1:11434"
+}
+\end{lstlisting}
+
+\subsection{自動作曲・ハーモニー付与API}
+
+\subsubsection{\texorpdfstring{\api{POST /api/compose}}{POST /api/compose}}
+指定されたテーマや音楽的パラメータに基づいて、AI（Ollama）で新規に楽曲（ABC記法）を生成し、WAVに合成します。
+
+\begin{table}[htbp]
+  \centering
+  \caption{/api/compose リクエストパラメータ仕様}
+  \label{tab:api_compose_params}
+  \begin{tabularx}{\textwidth}{l l l X}
+    \toprule
+    \textbf{パラメータ} & \textbf{データ型} & \textbf{デフォルト} & \textbf{説明} \\
+    \midrule
+    \texttt{theme} & string & （必須） & 作曲のテーマ・イメージ（日本語可） \\
+    \texttt{key} & string & \texttt{"C"} & 曲のキー（C, G, Am, Em, F, Dm など） \\
+    \texttt{tempo} & integer & \texttt{120} & テンポ BPM（60 〜 200） \\
+    \texttt{model} & string & \texttt{"qwen3.5:9b"} & 使用する Ollama 上のモデル名 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\textbf{/api/compose リクエスト・レスポンス例:}\\
+\begin{lstlisting}
+// リクエスト
+{
+  "theme": "爽やかな朝の森",
+  "key": "C",
+  "tempo": 120,
+  "model": "qwen3.5:9b"
+}
+
+// レスポンス
+{
+  "title": "爽やかな朝の森",
+  "abc_content": "X:1\nT:爽やかな朝の森\nM:4/4\nL:1/4\nQ:120\nK:C\nC E G c | ...",
+  "abc_url": "/output/compose_20260626_120000.abc",
+  "wav_url": "/output/compose_20260626_120000.wav"
+}
+\end{lstlisting}
+
+\subsubsection{\texorpdfstring{\api{POST /api/harmonize}}{POST /api/harmonize}}
+送信された単旋律の ABC 楽譜に対して、AI が自動で伴奏コードや追加パート（ハーモニー）を付与し、WAVにレンダリングします。
+
+\textbf{/api/harmonize リクエスト例:}\\
+\begin{lstlisting}
+{
+  "melody_abc": "X:1\nT:Test\nM:4/4\nL:1/4\nK:C\nC C G G | A A G2 |",
+  "title": "twinkle_harmony",
+  "model": "qwen3.5:9b"
+}
+\end{lstlisting}
+レスポンスは \api{/api/compose} と同一の形式（生成後の楽譜およびファイルURL）を返します。
+
+\subsection{MIDI変換・編集API}
+
+\subsubsection{\texorpdfstring{\api{POST /api/midi-to-abc}}{POST /api/midi-to-abc}}
+アップロードされたバイナリ MIDI ファイルを解析し、ABC 記法のテキストに変換します。
+
+\begin{itemize}
+  \item \textbf{Content-Type}: \texttt{multipart/form-data}
+  \item \textbf{パラメータ}: \texttt{midiFile} (ファイル本体)
+\end{itemize}
+
+\textbf{/api/midi-to-abc レスポンス例:}\\
+\begin{lstlisting}
+{
+  "status": "success",
+  "abc_text": "X:1\nT:Converted MIDI\nM:4/4\nL:1/8\nK:C\nC2 E2 G2 c4 | ...",
+  "message": "MIDI→ABC変換成功！"
+}
+\end{lstlisting}
+
+\subsubsection{\texorpdfstring{\api{POST /api/abc-to-midi}}{POST /api/abc-to-midi}}
+入力された ABC 楽譜テキストを MIDI ファイル（\file{.mid}）に変換します。
+内部的には、Node.js サーバーを経由して \cmd{abc2midi} エンジンが起動されます。
+
+\textbf{/api/abc-to-midi リクエスト・レスポンス例:}\\
+\begin{lstlisting}
+// リクエスト
+{
+  "abc_text": "X:1\nT:Test\nM:4/4\nL:1/4\nK:C\nC D E F | G A B c |"
+}
+
+// レスポンス
+{
+  "status": "success",
+  "message": "abc2midiによるMIDI変換に成功！",
+  "midi_url": "/generated_output.mid"
+}
+\end{lstlisting}
+
+\subsection{チャットAPI}
+
+\subsubsection{\texorpdfstring{\api{POST /api/chat}}{POST /api/chat}}
+Ollama 上のモデルと対話を行うストリーミング型 API です。Server-Sent Events (SSE) を使用して、生成されたテキストをリアルタイムでクライアントにプッシュします。
+
+\textbf{/api/chat リクエスト例:}\\
+\begin{lstlisting}
+{
+  "messages": [
+    {"role": "user", "content": "Gメジャーで短いワルツを作って"}
+  ],
+  "model": "qwen3.5:9b",
+  "system_prompt": "あなたは音楽作成を支援する優秀なアシスタントAIです。"
+}
+\end{lstlisting}
+
+\textbf{/api/chat レスポンスストリーム例（概略）:}\\
+\begin{lstlisting}
+data: {"token": "X"}
+data: {"token": ":1\n"}
+data: {"token": "T"}
+...
+data: [DONE]
+\end{lstlisting}

@@ -1,0 +1,38 @@
+%===============================================================
+% 01_overview.tex - システム概要
+%===============================================================
+\section{システム概要}
+
+\file{ABC Music Suite}は、ローカルマシン上で動作する大規模言語モデル（LLM）である「Ollama」を活用し、音楽の自動作曲、ハーモニー（伴奏）の付与、および楽譜・音源データの変換と管理を一元的に行うことができる統合システムです。
+
+外部のクラウドAPIキー（ChatGPTやClaudeなど）を一切必要とせず、すべてのAI推論プロセスがローカル環境で完結するため、機密性の高いオフライン環境や、通信帯域に制限のある環境（Raspberry Piなど）でも安定して動作します。
+
+\subsection{主な機能}
+
+本システムは、音楽制作とAIインタラクションをサポートする5つのコア機能を提供します。それぞれの機能の詳細は表\ref{tab:system_functions}の通りです。
+
+\begin{table}[htbp]
+  \centering
+  \caption{ABC Music Suiteの主要機能一覧}
+  \label{tab:system_functions}
+  \begin{tabularx}{\textwidth}{p{4cm} X}
+    \toprule
+    \textbf{機能名} & \textbf{説明} \\
+    \midrule
+    \textbf{\faMagic\ 自動作曲} & ユーザーが入力したテーマ（例：「爽やかな朝の森」）や音楽的パラメータ（キー、テンポ）に基づいて、AIがABC記法の楽譜を自動生成し、即座にMIDIおよびWAV音声としてレンダリング・再生します。 \\
+    \addlinespace
+    \textbf{\faMusic\ ハーモニー付与} & 単旋律（メロディのみ）のABC楽譜に対して、AIが自動的に適切な伴奏コード（和音）や追加のパートを構成し、ハーモニー豊かな楽曲へとアップグレードします。 \\
+    \addlinespace
+    \textbf{MIDI $\leftrightarrow$ ABC変換} & 既存のMIDIファイルをテキストベースのABC記法に、またはその逆に変換します。変換エンジンには、定評あるオープンソースの \cmd{abc2midi} および \cmd{midi2abc} を使用し、高い互換性を実現しています。 \\
+    \addlinespace
+    \textbf{\faComments\ AIチャット} & Ollama上のローカルLLMと自由に対話できるチャットUIを提供します。会話中にAIがABC記法で音楽コードを出力した場合、システムが自動的にそれを検出し、Web画面上で即座に楽譜表示および演奏できるようにします。 \\
+    \addlinespace
+    \textbf{\faLaptopCode\ Raspberry Pi連携} & 同一ローカルネットワーク（LAN）上に存在するRaspberry Piから、PC上の強力なOllamaサーバーに接続し、コマンドラインベースでAIチャットや自動演奏を実行します。 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{tcolorbox}[notebox, title=ローカルファーストのメリット]
+  本システムはローカルLLM（デフォルトでは \texttt{qwen3.5:9b} を推奨）をベースに設計されています。
+  これにより、インターネット接続が不要となり、APIの利用料金や利用制限を気にすることなく、無限に音楽の作成・実験を行うことができます。また、PCに搭載されたGPU（NVIDIA製GeForceなど）を最大限に活用することで、数秒〜十数秒での高速な楽譜生成が可能です。
+\end{tcolorbox}

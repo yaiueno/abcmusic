@@ -1,0 +1,15 @@
+\contentsline {section}{\numberline {1}発表会・質疑応答での想定問答集}{2}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Q1: サーバーを FastAPI と Node.js の2つに分けている理由は？}{2}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Q2: ChatGPT等の外部APIではなく、ローカルLLM (Ollama) を選んだ理由は？}{2}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Q3: なぜ MIDI データを直接生成せず「ABC記法」を経由させるのか？}{3}{subsection.1.3}%
+\contentsline {subsection}{\numberline {1.4}Q4: Raspberry Pi とホストPCはどのように連携しているのか？}{3}{subsection.1.4}%
+\contentsline {section}{\numberline {2}モジュール構成とディレクトリ構造}{5}{section.2}%
+\contentsline {subsection}{\numberline {2.1}ディレクトリ構造マップ}{5}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}主要モジュールの「働き」と関係性}{6}{subsection.2.2}%
+\contentsline {section}{\numberline {3}シンプルなシステム相関・データ連携図}{7}{section.3}%
+\contentsline {subsection}{\numberline {3.1}データの流れ（自動作曲の例）}{7}{subsection.3.1}%
+\contentsline {section}{\numberline {4}発表でアピールすべき設計の工夫点}{8}{section.4}%
+\contentsline {subsection}{\numberline {4.1}疎結合設計（ルーズカップリング）の適用}{8}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}リソースの適材適所配置（エッジ・ホスト PC 構成）}{8}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}バリデーションフィルターとAI自己修復リトライ}{8}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}ライセンスと保証免責（メーカーとしての責任）}{9}{subsection.4.4}%

@@ -1,0 +1,121 @@
+%===============================================================
+% 03_setup.tex - 環境構築・セットアップ
+%===============================================================
+\section{環境構築とセットアップ}
+
+本システムは、Windows 10/11 をホストPCとし、LAN経由でRaspberry Piなどの外部デバイスと接続することを想定しています。以下にシステムを稼働させるためのセットアップ手順を説明します。
+
+\subsection{前提条件・必要環境}
+
+本システムを実行するには、ホストPCに以下のソフトウェアがあらかじめインストールされている必要があります。
+
+\begin{itemize}
+  \item \textbf{Ollama}: ローカルで大規模言語モデルを実行するエンジン。
+    \begin{itemize}
+      \item 推奨モデル: \texttt{qwen3.5:9b} または \texttt{qwen2.5-coder:7b}（音楽記法（ABC記法）の生成において高い安定性を示します）。
+    \end{itemize}
+  \item \textbf{Python 3.10以上}: バックエンドの FastAPI サーバー動作に必要。
+  \item \textbf{Node.js 18以上}: フロントエンドの開発・ビルドおよび MIDI サーバー動作に必要。
+\end{itemize}
+
+\subsection{依存関係のインストール}
+
+リポジトリをクローンまたは展開した後、各ディレクトリで必要なパッケージをインストールします。
+
+\subsubsection{1. Python バックエンドの依存関係}
+コマンドプロンプトまたは PowerShell を起動し、以下のコマンドを実行します。
+\textbf{Pythonバックエンドの依存パッケージインストール:}\\
+\begin{lstlisting}[style=powershell]
+cd C:\情報科学演習\server
+pip install fastapi uvicorn pydantic requests
+\end{lstlisting}
+
+\subsubsection{2. Node.js MIDI サーバーの依存関係}
+MIDIファイルの相互変換およびラッパーとして動作するExpressサーバーの依存関係をインストールします。
+\textbf{Node.js MIDIサーバーの依存パッケージインストール:}\\
+\begin{lstlisting}[style=powershell]
+cd C:\情報科学演習\midi-server
+npm install
+\end{lstlisting}
+
+\subsubsection{3. フロントエンド (React) の依存関係}
+Vite + React ベースの Web UI 用パッケージをインストールします。
+\textbf{フロントエンドの依存パッケージインストール:}\\
+\begin{lstlisting}[style=powershell]
+cd C:\情報科学演習\web-ui
+npm install
+\end{lstlisting}
+
+\subsection{起動手順}
+
+\subsubsection{一括起動 (推奨)}
+本システムには、フロントエンド、バックエンド、MIDIサーバーの3つのサービスを一括で立ち上げるスクリプトが用意されています。
+
+PowerShell から起動する場合は、以下のコマンドを実行します。
+\textbf{PowerShellによる一括起動コマンド:}\\
+\begin{lstlisting}[style=powershell]
+cd C:\情報科学演習
+.\start.ps1
+\end{lstlisting}
+
+また、エクスプローラーから \file{start.bat} をダブルクリックすることでも、同様にすべてのサービスを一括起動できます。
+
+\subsubsection{個別起動 (開発・デバッグ用)}
+サービスを個別にデバッグしたい場合は、3つのターミナルを開き、それぞれ以下のコマンドを実行します。
+
+\begin{enumerate}
+  \item \textbf{FastAPI バックエンド}:
+    \begin{lstlisting}[style=powershell]
+cd C:\情報科学演習\server
+python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+    \end{lstlisting}
+  \item \textbf{MIDI サーバー}:
+    \begin{lstlisting}[style=powershell]
+cd C:\情報科学演習\midi-server
+node server.js
+    \end{lstlisting}
+  \item \textbf{Web UI (Vite)}:
+    \begin{lstlisting}[style=powershell]
+cd C:\情報科学演習\web-ui
+npm run dev
+    \end{lstlisting}
+\end{enumerate}
+
+\subsection{起動後のアクセス先URL}
+
+すべてのサービスが正常に起動すると、表\ref{tab:endpoints}のURLから各サービスにアクセスできます。
+
+\begin{table}[htbp]
+  \centering
+  \caption{アクセス先URL一覧}
+  \label{tab:endpoints}
+  \begin{tabularx}{\textwidth}{l l X}
+    \toprule
+    \textbf{アクセス先} & \textbf{URL} & \textbf{説明} \\
+    \midrule
+    \textbf{Web UI} & \url{http://localhost:5173} & \textbf{メインの操作画面（ここをブラウザで開きます）} \\
+    \textbf{FastAPI Swagger} & \url{http://localhost:8000/docs} & バックエンドのAPI仕様確認・テスト用インタラクティブ画面 \\
+    \textbf{FastAPI API} & \url{http://localhost:8000} & フロントエンドやラズパイからアクセスされるAPIベース \\
+    \textbf{MIDI Server} & \url{http://localhost:3001} & MIDI変換を処理するNode.jsのエンドポイント \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{設定の変更}
+
+\subsubsection{OllamaサーバーのIPアドレス設定}
+デフォルトでは、FastAPIは同一マシン上のOllama（\url{http://127.0.0.1:11434}）に接続します。
+Raspberry Piなど他のデバイスから接続する場合、またはOllamaを別PCで動かす場合は、\file{server/modules/config.py} を編集します。
+
+\textbf{config.py の編集例:}\\
+\begin{lstlisting}[style=python]
+# Set Ollama server IP
+OLLAMA_HOST = "192.168.0.136"  # Change to your host PC's IP address
+OLLAMA_PORT = 11434
+\end{lstlisting}
+
+また、環境変数 \texttt{OLLAMA\_HOST} を設定することでも上書き可能です。
+\begin{lstlisting}[style=powershell]
+$env:OLLAMA_HOST = "192.168.0.136"
+.\start.ps1
+\end{lstlisting}

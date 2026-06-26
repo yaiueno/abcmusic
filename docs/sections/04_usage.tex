@@ -1,0 +1,68 @@
+%===============================================================
+% 04_usage.tex - システムの利用方法
+%===============================================================
+\section{システムの利用方法}
+
+サービスを一括起動した後、ブラウザで \url{http://localhost:5173} を開くと、統合Web UIが表示されます。UIは上部のタブで切り替えることができ、それぞれの機能を提供します。
+
+また、UIの右上には「接続ステータスインジケーター」があり、OllamaサーバーおよびMIDIサーバーへの接続状態がリアルタイムで緑（接続中）または赤（切断）で表示されます。
+
+\subsection{\texorpdfstring{\faMagic\ 自動作曲タブ}{自動作曲タブ}}
+
+AIに指示を出して完全に新しい楽曲を生成させることができます。
+
+\begin{enumerate}
+  \item \textbf{テーマの入力}: 「爽やかな朝」「哀愁漂う夜の街」など、曲のイメージをテキストで自由に入力します。
+  \item \textbf{パラメータ設定}:
+    \begin{itemize}
+      \item \textbf{キー（調号）}: C, G, F, Am, Em などから選択します。
+      \item \textbf{テンポ（BPM）}: 60〜200 の範囲で設定します。
+    \end{itemize}
+  \item \textbf{使用モデルの選択}: ドロップダウンから、Ollamaにロードされている任意のLLMモデル（例: \texttt{qwen3.5:9b}）を選択します。
+  \item \textbf{実行}: 「作曲を開始」ボタンをクリックします。
+  \item \textbf{結果の確認}: 数秒後、AIが生成した楽譜テキスト（ABC記法）とレンダリングされた楽譜が画面に表示されます。また、画面上のオーディオプレーヤーで生成された音源（WAV）をその場で再生でき、ダウンロードも可能です。
+\end{enumerate}
+
+\subsection{\texorpdfstring{\faMusic\ ハーモニー付与タブ}{ハーモニー付与タブ}}
+
+既存の単旋律（メロディのみ）に対して、AIに伴奏（コードまたは別パート）を追加させることができます。
+
+\begin{enumerate}
+  \item \textbf{メロディ入力}: テキストエリアに既存のABC記法の楽譜を貼り付けます。
+  \item \textbf{モデルと設定の選択}: 自動作曲と同様に、モデルを設定します。
+  \item \textbf{実行}: 「ハーモニーを生成」ボタンをクリックします。
+  \item \textbf{結果の確認}: メロディラインに伴奏（コードや低音パートなど）が追加された新しい楽譜が生成されます。同様に、オーディオプレーヤーで和音を伴った演奏の再生・ダウンロードが可能です。
+\end{enumerate}
+
+\subsection{\texorpdfstring{MIDI $\leftrightarrow$ ABC変換タブ}{MIDI-ABC変換タブ}}
+
+PC上のMIDIファイルとテキストベースのABC楽譜を双方向に変換できます。
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tcolorbox}[mybox, title={MIDI $\leftrightarrow$ ABC 双方向変換の操作}]
+    \textbf{■ MIDIからABCへ変換する手順}
+    \begin{enumerate}
+      \item ファイル選択エリアで、PC内にある \file{.mid} ファイルをドラッグ＆ドロップまたはクリックして選択します。
+      \item 「ABCへ変換」ボタンをクリックします。
+      \item 変換後のABC楽譜テキストが表示され、画面上で楽譜のプレビューおよび音源再生ができます。
+    \end{enumerate}
+    \vspace{0.2cm}
+    \textbf{■ ABCからMIDIへ変換する手順}
+    \begin{enumerate}
+      \item エディタエリアに、直接ABC記法のテキストを入力または貼り付けます。
+      \item 「MIDIへ変換」ボタンをクリックします。
+      \item 変換に成功すると、生成された \file{.mid} ファイルのダウンロードリンクが表示されます。
+    \end{enumerate}
+  \end{tcolorbox}
+\end{figure}
+
+\subsection{\texorpdfstring{\faComments\ AIチャットタブ}{AIチャットタブ}}
+
+OllamaのローカルLLMとリアルタイムで対話できるチャット機能です。
+
+\begin{itemize}
+  \item \textbf{SSE（Server-Sent Events）による逐次出力}: 回答が1文字ずつ流れるように表示されます。
+  \item \textbf{楽譜の自動検出}: AIの返答の中に \texttt{X:1} から始まるようなABC楽譜ブロックが含まれている場合、チャットUIがそれを自動的に検出し、通常のテキストとは別に「楽譜パネル」として分離して表示します。
+  \item \textbf{即時プレビュー・演奏}: 検出された楽譜は、チャットスレッド内でそのまま \file{abcjs} ライブラリによって楽譜描画され、ボタン一つでブラウザのスピーカーからオーディオシンセサイザーを用いて演奏・再生することができます。
+\end{itemize}

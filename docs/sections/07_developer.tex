@@ -1,0 +1,91 @@
+%===============================================================
+% 07_developer.tex - 開発者向けドキュメント・設計詳細
+%===============================================================
+\section{開発者向け設計詳細と拡張性}
+
+本システムは、将来の機能追加やLLMプロバイダの変更、UIフレームワークの刷新に耐えうるよう、疎結合なモジュール設計を徹底しています。
+
+\subsection{疎結合設計の原則}
+
+本システムにおける各モジュールの結合は、HTTP API（REST / SSE）または明確なPythonクラスメソッドの引数/戻り値に限定されています。これにより、以下の変更が生じた場合でも、他のコンポーネントに影響を与えることなく改修が可能です。
+
+\begin{enumerate}
+  \item \textbf{LLM（AI）プロバイダの変更}: 
+    Ollamaから外部API（OpenAI, Anthropicなど）に移行する場合でも、\file{server/modules/llm\_client.py} 内の \texttt{OllamaClient} クラス（またはこれに代わる共通インターフェース）の内部処理を書き換えるだけで、FastAPI のルーティングやフロントエンド側には一切の変更が発生しません。
+  \item \textbf{フロントエンドの刷新}:
+    現在の Vite + React から他のフレームワーク（Next.js や Vue.js など）へ移行、あるいはネイティブアプリ（iOS / Android）を作成する場合でも、バックエンドの OpenAPI (FastAPI) が提供するエンドポイント群（\port{8000}）は同一であるため、バックエンドコードの変更は一切不要です。
+  \item \textbf{MIDI変換エンジンの変更}:
+    現在は C++ で書かれた実行バイナリ \cmd{abc2midi} を Node.js でラップして処理していますが、将来的に Python のネイティブライブラリによる処理へ移行する場合、\file{server/routes/midi\_convert.py} を書き換えて Node.js サーバーへのプロキシを解除するだけで、フロントエンド側の変換インターフェースは維持されます。
+\end{enumerate}
+
+\subsection{モジュール依存関係図}
+
+フロントエンドおよびバックエンドにおけるコードモジュール同士の依存関係を図\ref{fig:dependency}に示します。
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    scale=0.75, every node/.style={transform shape},
+    node distance=1.2cm and 1.5cm,
+    % スタイル定義
+    fe/.style={draw=node-ui, fill=node-ui!10, rounded corners=4pt, minimum width=2.8cm, minimum height=0.7cm, font=\small\ttfamily, align=center},
+    be/.style={draw=node-api, fill=node-api!10, rounded corners=4pt, minimum width=2.8cm, minimum height=0.7cm, font=\small\ttfamily, align=center},
+    ext/.style={draw=node-midi, fill=node-midi!10, rounded corners=4pt, minimum width=2.8cm, minimum height=0.7cm, font=\small\ttfamily, align=center},
+    ol/.style={draw=node-ollama, fill=node-ollama!10, rounded corners=4pt, minimum width=2.8cm, minimum height=0.7cm, font=\small\ttfamily, align=center},
+    dep/.style={-{Latex[length=6pt]}, thick, draw=brand-purple!70}
+  ]
+
+  % Frontend Nodes
+  \node[fe] (app) {App.jsx (Main)};
+  \node[fe, below left=1cm and 0.5cm of app] (comp) {ComposeTab};
+  \node[fe, below=1cm of app] (harm) {HarmonizeTab};
+  \node[fe, below right=1cm and 0.5cm of app] (midiconv) {MidiConvertTab};
+  \node[fe, right=2cm of app] (chat) {ChatTab};
+
+  \draw[dep] (app) -- (comp);
+  \draw[dep] (app) -- (harm);
+  \draw[dep] (app) -- (midiconv);
+  \draw[dep] (app) -- (chat);
+
+  % Backend Nodes (FastAPI)
+  \node[be, below=3.5cm of app] (main) {main.py (FastAPI)};
+  \node[be, below left=1cm and 0.5cm of main] (rcompose) {routes/compose.py};
+  \node[be, below=1.2cm of main] (rharmonize) {routes/harmonize.py};
+  \node[be, below right=1cm and 0.5cm of main] (rmidi) {routes/midi\_convert.py};
+  \node[be, right=2.2cm of main] (rchat) {routes/chat.py};
+
+  \draw[dep] (main) -- (rcompose);
+  \draw[dep] (main) -- (rharmonize);
+  \draw[dep] (main) -- (rmidi);
+  \draw[dep] (main) -- (rchat);
+
+  % Shared Backend modules
+  \node[be, below=1.2cm of rharmonize] (llmclient) {modules/llm\_client.py};
+  \node[be, left=1.5cm of llmclient] (synthesizer) {abc\_synthesizer.py};
+  \node[be, below=0.8cm of llmclient] (config) {modules/config.py};
+  
+  \draw[dep] (rcompose) -- (llmclient);
+  \draw[dep] (rharmonize) -- (llmclient);
+  \draw[dep] (rchat) -- (llmclient);
+  
+  \draw[dep] (rcompose) -- (synthesizer);
+  \draw[dep] (rharmonize) -- (synthesizer);
+  \draw[dep] (llmclient) -- (config);
+
+  % External Connectors
+  \node[ext, right=1.5cm of rmidi] (node-srv) {midi-server/server.js};
+  \node[ol, below=1.2cm of rchat] (ollama-api) {Ollama API};
+
+  \draw[dep] (rmidi) -- (node-srv);
+  \draw[dep] (llmclient) -- (ollama-api);
+
+  % Frontend to Backend (HTTP Connectors)
+  \draw[dep, dotted, brand-cyan] (comp.south) .. controls +(0,-1) and +(0,1) .. (rcompose.north);
+  \draw[dep, dotted, brand-cyan] (harm.south) -- (rharmonize.north);
+  \draw[dep, dotted, brand-cyan] (midiconv.south) .. controls +(0,-1) and +(0,1) .. (rmidi.north);
+  \draw[dep, dotted, brand-cyan] (chat.south) .. controls +(0,-1) and +(0,1) .. (rchat.north);
+
+\end{tikzpicture}
+\caption{フロントエンド・バックエンドにおけるモジュール依存関係}
+\label{fig:dependency}
+\end{figure}

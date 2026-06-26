@@ -1,0 +1,112 @@
+%===============================================================
+% 06_raspberry.tex - Raspberry Pi 連携ガイド
+%===============================================================
+\section{Raspberry Pi 連携ガイド}
+
+本システムは、LAN（ローカルエリアネットワーク）内に存在する Raspberry Pi から、強力な GPU を搭載したホスト PC の Ollama（LLM サーバー）と接続テストを行ったり、ローカルで楽譜ファイルやABC記法から直接音楽を波形合成して演奏を行う機能を提供しています。
+
+\subsection{セットアップ手順}
+
+以下の手順に沿って、ホスト PC および Raspberry Pi の設定を行います。
+
+\subsubsection{1. 関連ファイルのコピー}
+ホスト PC の PowerShell から、Raspberry Pi 用のクライアントスクリプト群を転送します。転送には専用の自動化スクリプト \file{copy-to-pi.ps1} を利用できます。
+\textbf{コピー実行コマンド:}\\
+\begin{lstlisting}[style=powershell]
+cd C:\practice
+.\copy-to-pi.ps1
+\end{lstlisting}
+または、手動で \cmd{scp} を使用してコピーすることも可能です。
+\begin{lstlisting}[style=powershell]
+scp C:\practice\raspberry\* pi@<raspi_ip>:~/llm-client/
+\end{lstlisting}
+
+\subsubsection{2. ラズパイ側での環境構築}
+Raspberry Pi に SSH 等でログインし、セットアップスクリプトを実行してパッケージとエイリアスを設定します。
+\textbf{環境構築スクリプト実行:}\\
+\begin{lstlisting}[language=bash]
+cd ~/llm-client
+bash setup.sh
+source ~/.bashrc
+\end{lstlisting}
+
+\subsubsection{3. ホスト PC の IP アドレス設定}
+Raspberry Pi 上の \file{\textasciitilde{}/llm-client/config.py} をテキストエディタ（nanoなど）で開き、ホスト PC の実際の IP アドレスを指定します。
+\textbf{接続先設定 (config.py):}\\
+\begin{lstlisting}[language=python]
+# ~/llm-client/config.py
+OLLAMA_HOST = "192.168.0.136"  # Change to your host PC's IP address
+OLLAMA_PORT = 11434
+DEFAULT_MODEL = "qwen3.5:9b"
+\end{lstlisting}
+
+\begin{tcolorbox}[tipbox, title=ホスト PC の IP アドレスを確認する方法]
+  ホスト PC の PowerShell で以下のコマンドを実行することで、自身の IPv4 アドレスを確認できます。
+  \begin{lstlisting}[style=powershell]
+(Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.InterfaceAlias -ne "Loopback*"}).IPAddress
+  \end{lstlisting}
+\end{tcolorbox}
+
+\subsubsection{4. ホスト PC での外部アクセス許可}
+デフォルトでは、Ollama はセキュリティ上の理由から \texttt{localhost (127.0.0.1)} からの接続のみを許可しています。外部の Raspberry Pi からアクセスを受け付けるには、環境変数を設定して Ollama を起動し直す必要があります。
+
+\textbf{Ollama公開設定:}\\
+\begin{lstlisting}[style=powershell]
+$env:OLLAMA_HOST = "0.0.0.0"
+ollama serve
+\end{lstlisting}
+
+\subsection{接続のテスト}
+
+設定が完了したら、Raspberry Pi 上で接続疎通テストスクリプトを実行します。
+\begin{lstlisting}[language=bash]
+python3 ~/llm-client/test_connection.py
+\end{lstlisting}
+接続が成功すると、ホスト PC 上の Ollama で動作している利用可能モデルの一覧が表示されます。
+
+\subsection{利用方法}
+
+\subsubsection{ABC 楽譜ファイルの直接演奏}
+ローカルに保存されている \file{.abc} 楽譜ファイル、または直接ABCテキストを指定してラズパイで自動演奏させることができます。
+\begin{lstlisting}[language=bash]
+play-abc /path/to/score.abc
+\end{lstlisting}
+
+\subsection{エイリアス一覧}
+
+\file{setup.sh} を実行すると、Raspberry Pi の \file{\textasciitilde{}/.bashrc} に以下のショートカットコマンドが追加され、簡単に操作できるようになります。
+
+\begin{table}[htbp]
+  \centering
+  \caption{Raspberry Pi エイリアスコマンド}
+  \label{tab:rpi_aliases}
+  \begin{tabularx}{\textwidth}{l l X}
+    \toprule
+    \textbf{コマンド} & \textbf{実際の実行コード} & \textbf{役割} \\
+    \midrule
+    \cmd{llm-test} & \texttt{python3 \textasciitilde{}/llm-client/test\_connection.py} & ホストPCとの接続テスト \\
+    \cmd{play-abc} & \texttt{python3 \textasciitilde{}/llm-client/play\_abc.py} & 指定したABC楽譜の演奏 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{トラブルシューティング}
+
+\begin{tcolorbox}[warnbox, title=接続がタイムアウトまたは拒否される場合]
+  \begin{enumerate}
+    \item \textbf{ネットワークの確認}: ホスト PC と Raspberry Pi が同じルーター（Wi-Fi等）に接続されており、相互に ping が通るか確認してください。
+    \item \textbf{Windows ファイアウォール}: Windows 側でポート \port{11434} へのインバウンド接続がブロックされている可能性があります。PowerShell から以下のコマンドを実行してポートを解放してください。
+      \begin{lstlisting}[style=powershell]
+New-NetFirewallRule -DisplayName "Ollama" -Direction Inbound -Protocol TCP -LocalPort 11434 -Action Allow
+      \end{lstlisting}
+    \item \textbf{Listen アドレス確認}: ホスト PC で \cmd{netstat -an | findstr 11434} を実行し、ローカルアドレスが \texttt{0.0.0.0:11434} または \texttt{*:11434} で LISTEN 状態になっているか確認してください。
+  \end{enumerate}
+\end{tcolorbox}
+
+\begin{tcolorbox}[warnbox, title=音が出ない (Raspberry Pi)]
+  スピーカーから音声波形を出力するには、オーディオユーティリティ \file{aplay} がインストールされている必要があります。
+  \begin{lstlisting}[language=bash]
+sudo apt-get update
+sudo apt-get install alsa-utils
+  \end{lstlisting}
+\end{tcolorbox}

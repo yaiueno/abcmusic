@@ -1,0 +1,62 @@
+%===============================================================
+% 08_license.tex - ライセンスと保証免責事項
+%===============================================================
+\section{ライセンスと品質保証・免責事項}
+
+本章では、開発元（以下「メーカー」）が提供する本システム（ABC Music Suite）の利用条件、メーカーが負う責任範囲、および保証内容について規定します。本システムを使用することにより、利用者は本規定に同意したものとみなされます。
+
+\subsection{製品保証とサポートの範囲}
+
+本システムは、特定の開発・評価用プロトタイプとして設計されています。メーカーは、本システムが利用者の特定の目的に適合すること、または動作に中断やエラーが生じないことについて、明示的にも黙示的にも保証いたしません。
+
+\subsubsection{1. 動作保証環境}
+メーカーが動作を確認し、サポート対象とする基本環境は以下の通りです。これら以外の環境（独自のOSカスタム、サポート対象外のPythonバージョンなど）における不具合については、メーカーは対応いたしかねます。
+\begin{itemize}
+  \item \textbf{ホストPC}: Windows 10/11 (64bit), Python 3.10以上, Node.js 18以上
+  \item \textbf{Ollama}: 推奨モデル \texttt{qwen3.5:9b} および \texttt{qwen2.5-coder:7b}
+  \item \textbf{Raspberry Pi}: Raspberry Pi OS (Bullseye/Bookworm), Python 3.9以上, ALSA音響ユーティリティが正常にインストールされていること
+\end{itemize}
+
+\subsubsection{2. 生成物（音楽データおよびテキスト）に関する責任}
+本システムで生成されるABC楽譜データおよびWAV音源は、すべてローカルLLM（AI）による推論の帰結です。
+\begin{itemize}
+  \item \textbf{出力の不確実性}: AIの性質上、常に音楽的に正しい結果が出力されるとは限りません。生成された楽譜における不協和音、音割れ、演奏不可能なフレーズの出現について、メーカーは修正の義務を負いません。
+  \item \textbf{権利関係}: 生成された楽曲が第三者の著作権またはその他の権利を侵害しないことについて、メーカーは保証しません。生成物の商業利用や公開に際しては、利用者の自己責任において法的確認を行ってください。
+\end{itemize}
+
+\subsection{責任の制限（免責事項）}
+
+本ソフトウェアの使用または使用不能から生じるすべての直接的、間接的、付随的、特別または結果的な損害（データの損失、業務の停止、ラズパイ等のハードウェア故障、ネットワーク帯域の枯渇、不正アクセス等を含む）について、メーカーおよび開発者は、契約上の請求、不法行為（過失を含む）、またはその他の法的根拠のいずれによるかを問わず、一切の責任を負いません。
+
+\begin{tcolorbox}[warnbox, title=セキュリティに関するメーカーからの警告]
+  ホストPC側で Ollama サーバーを外部公開設定（\texttt{OLLAMA\_HOST=0.0.0.0}）にする場合、同一LAN内のすべての機器からLLMサーバーへのアクセスが可能になります。
+  公共のネットワーク（公衆Wi-Fiなど）でこの設定を行った場合、外部から不正に利用されたり、ホストPCに負荷をかけられたりする危険性があります。外部公開は必ず信頼できるプライベートなネットワーク内でのみ実行してください。この設定に起因する不正アクセスについて、メーカーは一切の責任を負いません。
+\end{tcolorbox}
+
+\subsection{ライセンス規定}
+
+本システムのソースコードおよびドキュメントは、**MITライセンス**のもとで許諾されます。
+
+\begin{tcolorbox}[mybox, title=MIT License]
+\small
+\ttfamily
+Copyright (c) 2026 ABC Music Suite 開発チーム
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+\end{tcolorbox}

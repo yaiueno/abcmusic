@@ -1,0 +1,176 @@
+%===============================================================
+% 02_architecture.tex - システム構成・アーキテクチャ
+%===============================================================
+\section{システムアーキテクチャ}
+
+本システムは、機能ごとの責務を明確に分離した「マルチレイヤー（多層）アーキテクチャ」を採用しています。各コンポーネント間は疎結合に設計されており、API（HTTP/SSE）および明確なインターフェースを介してのみ通信を行います。
+
+\subsection{全体システム構成図}
+
+システム全体の構造および各サブシステムの通信関係を図\ref{fig:overall_arch}に示します。
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    scale=0.75, every node/.style={transform shape},
+    node distance=1.6cm and 2.2cm,
+    % スタイル定義
+    subsys/.style={draw=brand-purple!60, fill=bg-card!5, dashed, rounded corners=8pt, inner sep=12pt, font=\small\bfseries},
+    node-ui/.style={draw=node-ui, fill=node-ui!10, rounded corners=4pt, minimum width=3.2cm, minimum height=0.8cm, align=center, font=\small\bfseries},
+    node-api/.style={draw=node-api, fill=node-api!10, rounded corners=4pt, minimum width=3.2cm, minimum height=0.8cm, align=center, font=\small\bfseries},
+    node-midi/.style={draw=node-midi, fill=node-midi!10, rounded corners=4pt, minimum width=3.2cm, minimum height=0.8cm, align=center, font=\small\bfseries},
+    node-ollama/.style={draw=node-ollama, fill=node-ollama!10, rounded corners=4pt, minimum width=3.2cm, minimum height=0.8cm, align=center, font=\small\bfseries},
+    node-rpi/.style={draw=node-rpi, fill=node-rpi!10, rounded corners=4pt, minimum width=3.2cm, minimum height=0.8cm, align=center, font=\small\bfseries},
+    link/.style={-{Latex[length=8pt]}, thick, draw=brand-purple!80},
+    dlink/.style={{Latex[length=8pt]}-{Latex[length=8pt]}, thick, draw=brand-cyan!80, dashed}
+  ]
+
+  % Subgraph: Browser
+  \node[node-ui] (ui) {Vite + React UI};
+  \node[node-ui, below=0.3cm of ui] (tabs) {Compose / Harmonize\\MidiConvert / Chat};
+  \node[draw=node-ui!50, dotted, rounded corners=6pt, fit=(ui) (tabs), label={[node-ui]above:Webブラウザ (\port{5173})}] (browser) {};
+
+  % Subgraph: FastAPI
+  \node[node-api, right=3.5cm of ui] (fastapi) {FastAPI (main.py)};
+  \node[node-api, below=0.3cm of fastapi] (routes) {routes/ (各APIルーター)};
+  \node[node-api, below=0.3cm of routes] (llmclient) {modules/llm\_client.py};
+  \node[node-api, below=0.3cm of llmclient] (synthesizer) {abc\_synthesizer.py};
+  \node[draw=node-api!50, dotted, rounded corners=6pt, fit=(fastapi) (routes) (llmclient) (synthesizer), label={[node-api]above:FastAPIバックエンド (\port{8000})}] (python-server) {};
+
+  % Subgraph: Node.js
+  \node[node-midi, right=3.5cm of fastapi] (express) {Express (server.js)};
+  \node[node-midi, below=0.4cm of express] (abc2midi) {abc2midi.exe};
+  \node[draw=node-midi!50, dotted, rounded corners=6pt, fit=(express) (abc2midi), label={[node-midi]above:MIDIサーバー (\port{3001})}] (node-server) {};
+
+  % Subgraph: Ollama
+  \node[node-ollama, below=1.2cm of python-server] (ollama) {Ollama API};
+  \node[node-ollama, below=0.3cm of ollama] (models) {qwen3.5 / qwen2.5};
+  \node[draw=node-ollama!50, dotted, rounded corners=6pt, fit=(ollama) (models), label={[node-ollama]below:Ollama LLMサーバー (\port{11434})}] (ollama-server) {};
+
+  % Subgraph: Raspberry Pi
+  \node[node-rpi, left=3.5cm of ollama-server] (rpi-play) {play\_abc.py (演奏)};
+  \node[node-rpi, below=0.3cm of rpi-play] (rpi-synth) {abc\_synthesizer.py (合成)};
+  \node[draw=node-rpi!50, dotted, rounded corners=6pt, fit=(rpi-play) (rpi-synth), label={[node-rpi]below:Raspberry Pi (音声再生デバイス)}] (rpi) {};
+
+  % コネクション
+  \draw[link] (tabs.east) -- node[above, text=brand-purple, font=\tiny\bfseries] {HTTP POST / SSE} (routes.west);
+  \draw[link] (express.west) -- node[above, text=brand-cyan, font=\tiny\bfseries] {Proxy} (fastapi.east);
+  \draw[link] (express.south) -- (abc2midi.north);
+  \draw[link] (llmclient.south) -- node[left, text=brand-purple, font=\tiny\bfseries] {HTTP REST} (ollama.north);
+  \draw[link] (rpi-play.south) -- (rpi-synth.north);
+  \draw[link] (routes.south) -- (llmclient.north);
+  \draw[link] (routes.south) -- (synthesizer.north);
+
+\end{tikzpicture}
+\caption{ABC Music Suite システムアーキテクチャ全体図}
+\label{fig:overall_arch}
+\end{figure}
+
+\subsection{ポート割り当て一覧}
+
+システム各コンポーネントが占有するネットワークポートおよび通信プロトコルの一覧を表\ref{tab:ports}に示します。
+
+\begin{table}[htbp]
+  \centering
+  \caption{サービスポート一覧}
+  \label{tab:ports}
+  \begin{tabularx}{\textwidth}{l l l X}
+    \toprule
+    \textbf{サービス名} & \textbf{標準ポート} & \textbf{プロトコル} & \textbf{役割} \\
+    \midrule
+    \textbf{Vite Dev Server} & \port{5173} & HTTP & フロントエンド(React)の開発用Web配信 \\
+    \textbf{FastAPI Backend} & \port{8000} & HTTP / SSE & メインAPIサービス、ファイル配信、SSEストリーミング \\
+    \textbf{MIDI Server} & \port{3001} & HTTP & abc2midi / midi2abc ラッパープロキシ \\
+    \textbf{Ollama Service} & \port{11434} & HTTP & ローカルLLM推論API \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{主要データフロー}
+
+システムの動作時におけるデータの流れをシーケンス図形式で示します。
+
+\subsubsection{自動作曲シーケンス}
+
+ユーザーがWeb UIから曲のテーマを入力して作曲を指示した際、バックエンドで楽譜テキストが抽出され、音声波形（WAV）として合成されるまでの流れを図\ref{seq:compose}に示します。
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    scale=0.9, every node/.style={transform shape},
+    lifeline/.style={draw, dashed, gray!80, thick},
+    node-ui/.style={draw=node-ui, fill=node-ui!10, rounded corners=2pt, font=\small\bfseries, minimum width=2.2cm, minimum height=0.6cm},
+    node-api/.style={draw=node-api, fill=node-api!10, rounded corners=2pt, font=\small\bfseries, minimum width=2.2cm, minimum height=0.6cm},
+    node-ollama/.style={draw=node-ollama, fill=node-ollama!10, rounded corners=2pt, font=\small\bfseries, minimum width=2.2cm, minimum height=0.6cm},
+    msg/.style={-Latex, thick, draw=brand-purple},
+    reply/.style={-Latex, thick, dashed, draw=brand-cyan},
+    self-msg/.style={-Latex, thick, draw=brand-purple!60}
+  ]
+
+  % ライフラインヘッダ
+  \node[node-ui] (ui) at (0,0) {React UI};
+  \node[node-api] (api) at (4,0) {FastAPI};
+  \node[node-ollama] (ol) at (8,0) {Ollama};
+
+  % ライフライン縦線
+  \draw[lifeline] (ui.south) -- (0,-6.5);
+  \draw[lifeline] (api.south) -- (4,-6.5);
+  \draw[lifeline] (ol.south) -- (8,-6.5);
+
+  % メッセージの描画
+  \draw[msg] (0,-1) -- node[above, font=\tiny\bfseries] {1. POST /api/compose \{theme, key...\}} (4,-1);
+  \draw[msg] (4,-1.8) -- node[above, font=\tiny\bfseries] {2. Generate Prompt \& Request} (8,-1.8);
+  \draw[reply] (8,-2.8) -- node[above, font=\tiny\bfseries] {3. Reply (ABC text included)} (4,-2.8);
+
+  % 自己呼び出し (FastAPI内の処理)
+  \draw[self-msg] (4,-3.4) -- ++(1,0) -- ++(0,-0.6) -- node[right, pos=0.5, font=\tiny\bfseries] {4. Extract ABC block} (4,-4.0);
+  \draw[self-msg] (4,-4.4) -- ++(1,0) -- ++(0,-0.6) -- node[right, pos=0.5, font=\tiny\bfseries] {5. Convert ABC to WAV} (4,-5.0);
+
+  \draw[reply] (4,-5.8) -- node[above, font=\tiny\bfseries] {6. Return JSON \{abc\_content, wav\_url\}} (0,-5.8);
+
+\end{tikzpicture}
+\caption{自動作曲処理のデータフロー}
+\label{seq:compose}
+\end{figure}
+
+\subsubsection{MIDI・ABC相互変換シーケンス}
+
+MIDIファイルが入力され、Node.js Expressに配置された外部実行バイナリ \file{abc2midi} 等を経由して変換が実行されるフローを図\ref{seq:midi_convert}に示します。
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    scale=0.9, every node/.style={transform shape},
+    lifeline/.style={draw, dashed, gray!80, thick},
+    node-ui/.style={draw=node-ui, fill=node-ui!10, rounded corners=2pt, font=\small\bfseries, minimum width=2.2cm, minimum height=0.6cm},
+    node-api/.style={draw=node-api, fill=node-api!10, rounded corners=2pt, font=\small\bfseries, minimum width=2.2cm, minimum height=0.6cm},
+    node-midi/.style={draw=node-midi, fill=node-midi!10, rounded corners=2pt, font=\small\bfseries, minimum width=2.2cm, minimum height=0.6cm},
+    msg/.style={-Latex, thick, draw=brand-purple},
+    reply/.style={-Latex, thick, dashed, draw=brand-cyan},
+    self-msg/.style={-Latex, thick, draw=brand-purple!60}
+  ]
+
+  % ライフラインヘッダ
+  \node[node-ui] (ui) at (0,0) {React UI};
+  \node[node-api] (api) at (3.5,0) {FastAPI};
+  \node[node-midi] (node) at (7,0) {MIDI Server};
+
+  % ライフライン縦線
+  \draw[lifeline] (ui.south) -- (0,-6);
+  \draw[lifeline] (api.south) -- (3.5,-6);
+  \draw[lifeline] (node.south) -- (7,-6);
+
+  % メッセージ
+  \draw[msg] (0,-1) -- node[above, font=\tiny\bfseries] {1. Upload MIDI (POST)} (3.5,-1);
+  \draw[msg] (3.5,-1.8) -- node[above, font=\tiny\bfseries] {2. Proxy to Node.js} (7,-1.8);
+
+  % 自己呼び出し (Node.jsから外部バイナリ実行)
+  \draw[self-msg] (7,-2.4) -- ++(1,0) -- ++(0,-0.8) -- node[right, pos=0.5, font=\tiny\bfseries, align=left] {3. Execute\\midi2abc.exe} (7,-3.2);
+
+  \draw[reply] (7,-4.0) -- node[above, font=\tiny\bfseries] {4. Return ABC text} (3.5,-4.0);
+  \draw[reply] (3.5,-4.8) -- node[above, font=\tiny\bfseries] {5. Return JSON \{abc\_text\}} (0,-4.8);
+
+\end{tikzpicture}
+\caption{MIDIからABCへの変換フロー}
+\label{seq:midi_convert}
+\end{figure}

@@ -1,0 +1,353 @@
+%===============================================================
+% ABC Music Suite システム理解・発表対策ガイド
+% コンパイル: platex understanding.tex && dvipdfmx understanding.dvi
+%===============================================================
+\documentclass[a4paper,11pt]{jlreq}
+
+\usepackage[dvipdfmx]{graphicx,xcolor}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, calc}
+\usepackage{float}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{geometry}
+\usepackage[dvipdfmx]{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{dirtree}
+
+% ページレイアウト設定
+\geometry{
+  top=25mm, bottom=25mm,
+  left=25mm, right=25mm,
+  headheight=29pt
+}
+\addtolength{\topmargin}{-14pt}
+
+% カラーパレット定義（明るめの背景用にマイルドに調整）
+\definecolor{brand-cyan}{RGB}{14,116,144}
+\definecolor{brand-purple}{RGB}{109,40,217}
+\definecolor{brand-green}{RGB}{21,128,61}
+\definecolor{brand-blue}{RGB}{29,78,216}
+\definecolor{bg-light}{RGB}{248,250,252}
+\definecolor{bg-card}{RGB}{241,245,249}
+\definecolor{text-main}{RGB}{15,23,42}
+\definecolor{text-muted}{RGB}{71,85,105}
+\definecolor{accent-red}{RGB}{185,28,28}
+
+\definecolor{node-ui}{RGB}{37,99,235}
+\definecolor{node-api}{RGB}{13,148,136}
+\definecolor{node-midi}{RGB}{22,163,74}
+\definecolor{node-ollama}{RGB}{147,51,234}
+\definecolor{node-rpi}{RGB}{217,119,6}
+
+% セクション見出しスタイル
+\titleformat{\section}
+  {\Large\bfseries\color{brand-purple}}
+  {\thesection}{1em}{}[{\color{brand-cyan}\titlerule[1.5pt]}]
+
+\titleformat{\subsection}
+  {\large\bfseries\color{brand-cyan!90!black}}
+  {\thesubsection}{1em}{}
+
+% tcolorboxスタイル（想定問答集用）
+\tcbset{
+  qbox/.style={
+    enhanced,
+    colback=brand-cyan!6,
+    colframe=brand-cyan!80,
+    fonttitle=\bfseries\color{white},
+    coltitle=white,
+    coltext=text-main,
+    leftrule=4pt,
+    sharp corners=west
+  },
+  abox/.style={
+    enhanced,
+    colback=brand-green!5,
+    colframe=brand-green!80,
+    coltext=text-main,
+    leftrule=4pt,
+    sharp corners=west
+  },
+  pointbox/.style={
+    enhanced,
+    colback=brand-purple!6,
+    colframe=brand-purple!80,
+    coltext=text-main,
+    leftrule=4pt,
+    sharp corners=west
+  }
+}
+
+% ヘッダ・フッタ
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{text-muted}ABC Music Suite --- システム理解・発表対策ガイド}
+\fancyhead[R]{\small\color{text-muted}\rightmark}
+\fancyfoot[C]{\small\color{text-muted}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{brand-purple!40}\leaders\hrule height \headrulewidth\hfill}}
+
+% ハイパーリンク
+\hypersetup{
+  colorlinks=true,
+  linkcolor=brand-purple,
+  urlcolor=brand-cyan,
+  pdftitle={ABC Music Suite システム理解・発表対策ガイド},
+  pdfauthor={情報科学演習}
+}
+
+% 便利コマンド
+\newcommand{\api}[1]{\texttt{\color{brand-cyan}#1}}
+\newcommand{\file}[1]{\texttt{\color{brand-green}#1}}
+\newcommand{\port}[1]{\textbf{\color{brand-cyan}:#1}}
+
+\begin{document}
+
+%===============================================================
+% タイトル
+%===============================================================
+\begin{center}
+  {\fontsize{14}{18}\selectfont\color{brand-cyan}\texttt{情報科学演習 --- 発表・質疑応答対策}}\\[0.8em]
+  {\fontsize{24}{30}\selectfont\bfseries\color{brand-purple}ABC Music Suite システム理解ガイド}\\[0.4em]
+  {\fontsize{14}{18}\selectfont\color{text-muted}〜 モジュール構成・役割解説・想定問答集 〜}\\[1.5em]
+  {\color{brand-purple!50}\rule{\textwidth}{1.5pt}}\\[1em]
+\end{center}
+
+本書は、開発した「ABC Music Suite」のモジュール構成、各ファイルが担当する役割、および発表会で想定される質疑応答への対策をまとめたガイドブックです。公式の技術仕様書（\file{main.pdf}）を補完し、自分たちの言葉でシステムを説明できるようにするための理解支援資料として活用してください。
+
+\tableofcontents
+\newpage
+
+%===============================================================
+% 第1章: 想定問答集
+%===============================================================
+\section{発表会・質疑応答での想定問答集}
+
+審査員や他の学生から質問されやすい「技術選定の意図」や「システムの境界」について、情報科学的に説得力のある切り返しを整理しました。
+
+\subsection{Q1: サーバーを FastAPI と Node.js の2つに分けている理由は？}
+
+\begin{tcolorbox}[qbox, title=質問の要旨]
+「なぜ Python（FastAPI）と Node.js（Express）の2つのサーバーを起動しているのですか？ Python のライブラリだけで完結できなかったのですか？」
+\end{tcolorbox}
+
+\begin{tcolorbox}[abox]
+\textbf{【回答案】} \\
+「MIDI と楽譜テキスト（ABC記法）の相互変換には、実績のあるC言語製のコマンドラインツール \file{abc2midi} および \file{midi2abc} を使用しています。これらを Web API として安全にラッピングするにあたり、先行の安定したオープンソースプロジェクトである \file{abc2midiGUI} (Node.js/Express製) の資産をそのまま再利用（プロキシ通信）する方針をとりました。
+
+これを Python に無理やり移植すると、プロセスの並行実行処理や環境依存のバグが発生するリスクがありました。そのため、本システムでは\textbf{『マイクロサービス的な設計思想』}に基づき、MIDI変換処理を Node.js サーバーにカプセル化（専門特化）させ、メインの FastAPI バックエンドから HTTP 経由で呼び出す形にしました。これにより、各サーバーコードが非常にシンプルかつ頑健に保たれています。」
+\end{tcolorbox}
+
+\subsection{Q2: ChatGPT等の外部APIではなく、ローカルLLM (Ollama) を選んだ理由は？}
+
+\begin{tcolorbox}[qbox, title=質問の要旨]
+「APIキーを取得して ChatGPT や Claude を使った方が賢い音楽が作れるのでは？ なぜわざわざ重いローカルLLMを動かすのですか？」
+\end{tcolorbox}
+
+\begin{tcolorbox}[abox]
+\textbf{【回答案】} \\
+「理由は大きく2つあります。1つ目は\textbf{完全なローカル（オフライン）環境での動作保証とセキュリティ}です。本システムは LAN 内で完結するように設計されており、外部のインターネット回線の品質や切断に影響されずに動作します。
+
+2つ目は\textbf{ランニングコストがゼロ}である点です。外部 API はリクエストごとに課金され、大量の検証やループ再生テストでコストが膨らみます。ローカルLLMを利用することで、開発中のテスト回数に制限がなくなり、かつ Raspberry Pi とローカルPC間のクローズドな無線LAN環境だけで安定したエッジAI連携を実現することができました。」
+\end{tcolorbox}
+
+\subsection{Q3: なぜ MIDI データを直接生成せず「ABC記法」を経由させるのか？}
+
+\begin{tcolorbox}[qbox, title=質問の要旨]
+「AIに直接 MIDI や WAV のバイナリデータを作らせないのはなぜですか？ なぜテキストの ABC記法 を挟む必要があるのですか？」
+\end{tcolorbox}
+
+\begin{tcolorbox}[abox]
+\textbf{【回答案】} \\
+「大規模言語モデル（LLM）は、本質的に『テキスト（文字配列）の次に来る確率の高い単語を予測する』仕組みです。そのため、0と1で構成されるバイナリデータ（MIDIファイルや音声WAVデータ）を直接出力することは非常に困難です。
+
+一方、\textbf{ABC記法は楽譜をテキスト（例: ドレミは \texttt{C D E}）で表現する規格}です。LLM にとって ABC記法は『楽譜言語という外国語のテキスト』として処理できるため、文脈を捉えた破綻のないメロディを容易に生成できます。AIが生成したテキスト楽譜を、バックエンド側の Python と Node.js サーバーで MIDI / WAV に安全に波形合成するプロセスをとることで、AIの強みとプログラムの確実性を組み合わせています。」
+\end{tcolorbox}
+
+\subsection{Q4: Raspberry Pi とホストPCはどのように連携しているのか？}
+
+\begin{tcolorbox}[qbox, title=質問の要旨]
+「Raspberry Pi と PC の間では、具体的に何が送受信され、どこで音が鳴っているのですか？」
+\end{tcolorbox}
+
+\begin{tcolorbox}[abox]
+\textbf{【回答案】} \\
+「同じ Wi-Fi ルーター（LAN）に接続された環境下で、ラズパイからホストPCの接続状況をテストするために \file{test\_connection.py} から HTTP リクエストを送信することができます。
+
+ユーザーは、ラズパイにコピーした \file{play\_abc.py} を使用して、PC等で作成されたABC楽譜ファイルを直接読み込んだり、楽譜テキストを引数に指定して自動演奏させることができます。重いAI推論やWAV生成はPC側で行い、ラズパイはスピーカーを鳴らす音声出力（エッジデバイス）として協調する構成です。」
+\end{tcolorbox}
+
+\newpage
+
+%===============================================================
+% 第2章: モジュール構成と役割
+%===============================================================
+\section{モジュール構成とディレクトリ構造}
+
+本システムのコードベースは、機能ごとの役割が明確に分離されています。以下にディレクトリマップと、各ファイルが担当する「働き」を示します。
+
+\subsection{ディレクトリ構造マップ}
+
+\dirtree{%
+.1 abc2midiGUI\DTcomment{プロジェクトルート（c:/Users/yaito/Downloads/abc2midiGUI）}.
+.2 start.ps1\DTcomment{システム全体を一括起動するコントロールスクリプト (PowerShell)}.
+.2 start.bat\DTcomment{一括起動用のWindowsバッチファイル}.
+.2 host.ps1\DTcomment{ホストPCのIPアドレス等を設定するアシストスクリプト}.
+.2 copy-to-pi.ps1\DTcomment{Raspberry Piへファイルを同期するためのスクリプト}.
+.2 abc\_synthesizer.py\DTcomment{ABCテキストを解析し、プログラム的にWAV音声を合成するモジュール}.
+.2 server/\DTcomment{Python FastAPI バックエンドサーバー}.
+.3 main.py\DTcomment{FastAPIサーバーの起動、CORS設定、静的ファイル配信登録}.
+.3 requirements.txt\DTcomment{Pythonバックエンドの依存ライブラリ指定}.
+.3 modules/\DTcomment{サーバー内共通処理}.
+.4 config.py\DTcomment{OllamaやMIDIサーバーの接続先URL、保存ディレクトリ等の設定管理}.
+.4 llm\_client.py\DTcomment{Ollama APIと通信し、プロンプトの送信やストリーム受信を行う}.
+.3 routes/\DTcomment{各APIエンドポイントの実装}.
+.4 compose.py\DTcomment{自動作曲リクエストの受付・楽譜抽出・WAV合成処理を担当}.
+.4 harmonize.py\DTcomment{既存メロディへの自動伴奏リクエストを担当}.
+.4 chat.py\DTcomment{AIとの汎用対話（チャット）エンドポイント}.
+.4 midi\_convert.py\DTcomment{MIDIとABC記法の相互変換リクエストを担当}.
+.2 web-ui/\DTcomment{React フロントエンド（Vite 構成）}.
+.3 src/\DTcomment{フロントエンドソースコード}.
+.4 App.jsx\DTcomment{メインUI画面、グローバル状態、タブ切り替え（4機能）を管理}.
+.4 index.css\DTcomment{全体デザインシステム（ダークモード、グラデーション、フォント）}.
+.4 components/\DTcomment{各タブの画面コンポーネント}.
+.5 ComposeTab.jsx\DTcomment{自動作曲タブ画面（テーマ入力、WAV再生、楽譜表示）}.
+.5 HarmonizeTab.jsx\DTcomment{自動伴奏タブ画面（メロディ入力、コード付与指示）}.
+.5 MidiConvertTab.jsx\DTcomment{MIDI/ABC相互変換タブ画面（ファイルドラッグ＆ドロップ, 変換）}.
+.5 ChatTab.jsx\DTcomment{AI音楽チャットタブ画面（対話、楽譜自動演奏）}.
+.2 midi-server/\DTcomment{Node.js MIDI 変換中継プロキシ}.
+.3 server.js\DTcomment{Expressで構築されたMIDI・ABC相互変換API}.
+.3 abc2midi.exe\DTcomment{C言語製のABCからMIDIへの変換ツール（バイナリ）}.
+.2 raspberry/\DTcomment{Raspberry Pi上での動作スクリプト}.
+.3 play\_abc.py\DTcomment{ABC楽譜テキストを受け取り、MIDI変換＆演奏（aplay/MIDIデバイス）するロジック}.
+.3 config.py\DTcomment{ラズパイからホストPCへ接続するためのIPアドレス・ポート設定}.
+}
+
+\subsection{主要モジュールの「働き」と関係性}
+
+\begin{enumerate}
+  \item \textbf{UI層 (web-ui)}:
+    ブラウザ上で動作し、ユーザーの入力を受け付けます。FastAPIサーバーのAPIに非同期（Fetch API / EventSource）で通信し、結果（楽譜やWAVのURL）を可視化します。
+  \item \textbf{API・ロジック層 (server)}:
+    FastAPI が全リクエストの交通整理を行います。自動作曲時は \file{modules/llm\_client.py} を通じて Ollama から楽譜を取得し、\file{abc\_synthesizer.py} でそれを音声（WAV）化してブラウザにURLを返します。
+  \item \textbf{変換仲介層 (midi-server)}:
+    バイナリ（\file{abc2midi.exe} 等）を直接Pythonから叩くのではなく、Node.js Express を経由した「Web API」として外出ししています。これにより、変換サーバーを別PCに配置するなどのスケーラビリティが確保されています。
+  \item \textbf{エッジ出力層 (raspberry)}:
+    Ollama や FastAPI から楽譜テキストを受け取り、ラズパイのサウンドカードを介して物理的なスピーカーから演奏します。
+\end{enumerate}
+
+\newpage
+
+%===============================================================
+% 第3章: システム相関図 (TikZ)
+%===============================================================
+\section{シンプルなシステム相関・データ連携図}
+
+システムの全体像と、データがどのように流れるか（どのポートを使ってどのファイル同士が連携しているか）を直感的にまとめた相関図を図\ref{fig:simple_relation}に示します。
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    scale=0.85, every node/.style={transform shape},
+    node distance=1.6cm and 1.8cm,
+    % ノードスタイル定義
+    comp/.style={draw=black!70, rounded corners=6pt, minimum width=3.8cm, minimum height=1.0cm, align=center, font=\small\bfseries, line width=1.2pt},
+    ui-node/.style={comp, draw=node-ui, fill=node-ui!12},
+    api-node/.style={comp, draw=node-api, fill=node-api!12},
+    midi-node/.style={comp, draw=node-midi, fill=node-midi!12},
+    ol-node/.style={comp, draw=node-ollama, fill=node-ollama!12},
+    rpi-node/.style={comp, draw=node-rpi, fill=node-rpi!12},
+    % 矢印スタイル
+    flow/.style={-{Latex[length=8pt]}, thick, line width=1.5pt, draw=brand-purple},
+    flow-cyan/.style={-{Latex[length=8pt]}, thick, line width=1.5pt, draw=brand-cyan},
+    flow-dashed/.style={-{Latex[length=8pt]}, thick, dashed, line width=1.2pt, draw=text-muted}
+  ]
+
+  % ノード配置
+  \node[ui-node] (ui) {React UI \\ (web-ui/ポート\port{5173})};
+  \node[api-node, right=2.8cm of ui] (api) {FastAPI Backend \\ (server/ポート\port{8000})};
+  \node[midi-node, right=2.8cm of api] (midi) {MIDI Server (Node.js) \\ (midi-server/ポート\port{3001})};
+  
+  \node[ol-node, below=2.5cm of api] (ollama) {Ollama LLM \\ (ポート\port{11434})};
+  \node[rpi-node, left=2.8cm of ollama] (rpi) {Raspberry Pi \\ (再生ユーティリティ)};
+
+  % 接続関係の描画
+  \draw[flow] (ui) to[bend left=15] node[above, font=\tiny\bfseries, text=brand-purple] {(1) 作曲リクエスト(HTTP)} (api);
+  \draw[flow-cyan] (api) to[bend left=15] node[below, font=\tiny\bfseries, text=brand-cyan] {(6) WAV音声URLを返却} (ui);
+
+  \draw[flow] (api) -- node[left, font=\tiny\bfseries, text=brand-purple] {(2) プロンプト送信} (ollama);
+  \draw[flow-cyan] (ollama) -- node[right, font=\tiny\bfseries, text=brand-cyan] {(3) ABC楽譜テキスト} (api);
+
+  \draw[flow] (api) to[bend left=15] node[above, font=\tiny\bfseries, text=brand-purple] {(4) MIDI/ABC変換依頼} (midi);
+  \draw[flow-cyan] (midi) to[bend left=15] node[below, font=\tiny\bfseries, text=brand-cyan] {(5) 変換データ返却} (api);
+
+  \draw[flow-dashed] (rpi) -- node[above, font=\tiny\bfseries, text=text-muted, pos=0.5, sloped] {接続テスト (HTTP)} (ollama);
+  \draw[flow-dashed] (api) -- node[above, font=\tiny\bfseries, text=text-muted, pos=0.5, sloped] {ファイル同期 (scp)} (rpi);
+
+  % グループ（PCとラズパイの境界）
+  \node[draw=brand-purple!40, dotted, line width=1.5pt, rounded corners=8pt, fit=(ui) (api) (midi) (ollama), label={[text-muted]above:ホストPC (Windows開発機)}] (host-pc) {};
+
+\end{tikzpicture}
+\caption{ABC Music Suite 各モジュールの連携関係とデータの流れ}
+\label{fig:simple_relation}
+\end{figure}
+
+\subsection{データの流れ（自動作曲の例）}
+
+図\ref{fig:simple_relation}における自動作曲時のデータ推移は以下の通りです：
+\begin{enumerate}
+  \item \textbf{(1) リクエスト}: ブラウザ（React UI）から作曲テーマ「明るい朝の曲」とパラメータが FastAPI に届きます。
+  \item \textbf{(2) AI推論要求}: FastAPI は適切なプロンプト（指示書）を組み立てて Ollama に送ります。
+  \item \textbf{(3) 楽譜生成}: Ollama は ABC記法（楽譜テキスト）を生成し、FastAPI に返します。
+  \item \textbf{(4)・(5) MIDI変換}: FastAPI は生成された ABC記法を Node.js (MIDI Server) に渡し、MIDIファイルへと構造化します。
+  \item \textbf{WAV波形合成}: FastAPI は \file{abc\_synthesizer.py} を動かし、MIDI/ABCデータをもとにWAV音声データを生成・保存します。
+  \item \textbf{(6) レスポンス}: 合成されたWAVのURLと、ABC楽譜テキストがブラウザに返され、ブラウザ側で即座に演奏・可視化されます。
+\end{enumerate}
+
+\newpage
+
+%===============================================================
+% 第4章: 設計アピールポイント
+%===============================================================
+\section{発表でアピールすべき設計の工夫点}
+
+このシステムが「単に組み合わせただけ」ではなく、情報科学的な考慮に基づいて設計されていることを示すアピールポイントです。
+
+\subsection{疎結合設計（ルーズカップリング）の適用}
+
+モジュール同士の依存度を極限まで低くすることで、将来の改修に非常に強いシステムとなっています。
+\begin{tcolorbox}[pointbox, title=アピール例: AIエンジンの差し替え]
+「現在、AI推論には Ollama を使用していますが、将来的に ChatGPT (OpenAI API) や Claude に移行する場合でも、変更が必要なのは \file{server/modules/llm\_client.py} のクラス内部だけです。フロントエンド（UI）や、FastAPI の各ルート（エンドポイント）コードは1行も書き換える必要がありません。」
+\end{tcolorbox}
+
+\subsection{リソースの適材適所配置（エッジ・ホスト PC 構成）}
+
+スペックの異なるデバイスをネットワーク越しに協調させる「適材適所」の分散システム設計を実践しています。
+\begin{tcolorbox}[pointbox, title=アピール例: ラズパイの役割分担]
+「Raspberry Pi のような非力なシングルボードコンピュータで直接大規模LLM（数GBのモデル）を動かすことは、メモリや処理速度の面で現実的ではありません。
+そこで、推論や音声合成などの『重い計算』はすべてホストPCのGPUリソースに任せ、ラズパイはユーザー入力をホストPCに届けてスピーカーで再生するだけの『エッジデバイス』に徹するように設計しました。これにより、デバイスの限界を超えた高度なAI連携が低消費電力で実現できています。」
+\\
+※また、ラズパイ側の \file{raspberry/play\_abc.py} が直接ホストPCの音声ファイルをダウンロードしてローカルで MIDI 再生する仕組みにより、物理的なスピーカー構成への切り替えも容易です。
+\end{tcolorbox}
+
+\subsection{バリデーションフィルターとAI自己修復リトライ}
+
+AIが出力した楽譜テキストが正しい文法や拍数に従っているかをシステム側で検証し、エラーがあれば自動で修正指示を投げる「自己修復ループ」を組み込んでいます。
+\begin{tcolorbox}[pointbox, title=アピール例: AIへの自動差し戻し]
+「大規模言語モデル（LLM）は稀に小節の拍数を間違えたり、ABC記法で使えない無効な文字を出力することがあります。本システムでは、バックエンド側に『バリデーター（\file{abc\_validator.py}）』を配置し、楽譜ヘッダー・使用文字・拍数（4拍子）を自動で数学的に検証しています。
+
+もしエラーを検知した場合、単に失敗を返すのではなく、エラー内容（例: 『1小節目が4.5拍です』）をAIにフィードバックし、最大5回まで自動で差し戻して再生成（リトライ）させます。この検証＆フィードバックループにより、AIの文法ミスによる音声合成のクラッシュを防ぎ、極めて高い生成成功率を実現しています。」
+\end{tcolorbox}
+
+\subsection{ライセンスと保証免責（メーカーとしての責任）}
+
+ソフトウェアの配布や利用における権利関係・セキュリティ上の責任範囲を明確に定義しています。
+\begin{tcolorbox}[pointbox, title=アピール例: 免責事項の明記]
+「本システムは、LAN 内でポートを解放してラズパイからアクセスを受ける構造になっています。開発者（メーカー）としての責任範囲を切り分け、意図しないポート開放による不正アクセスやハードウェアの故障に対する免責事項を MIT ライセンスと合わせて明記しました。これにより、ソフトウェアの公開における法的な管理手順を実践的に学んでいます。」
+\end{tcolorbox}
+
+\end{document}
