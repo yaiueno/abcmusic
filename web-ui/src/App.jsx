@@ -20,8 +20,9 @@ export default function App() {
   const [health, setHealth] = useState(null)
   const [healthChecked, setHealthChecked] = useState(false)
 
-  // 起動時: モデル一覧とヘルスチェック
-  useEffect(() => {
+  // ヘルスチェックとモデルの再読み込み
+  const checkSystemStatus = () => {
+    setHealthChecked(false)
     fetch(`${API_BASE}/api/health`)
       .then(r => r.json())
       .then(d => { setHealth(d); setHealthChecked(true) })
@@ -32,10 +33,19 @@ export default function App() {
       .then(d => {
         const ms = d.models || []
         setModels(ms)
-        const pref = ms.find(m => m.includes('coder') || m.includes('nothink')) || ms[0] || 'qwen3.5:9b'
-        setSelectedModel(pref)
+        if (ms.length > 0) {
+          setSelectedModel(curr => {
+            if (ms.includes(curr)) return curr
+            return ms.find(m => m.includes('coder') || m.includes('nothink')) || ms[0] || 'qwen3.5:9b'
+          })
+        }
       })
       .catch(() => {})
+  }
+
+  // 起動時: モデル一覧とヘルスチェック
+  useEffect(() => {
+    checkSystemStatus()
   }, [])
 
   const tabProps = { models, selectedModel, onModelChange: setSelectedModel }
@@ -54,18 +64,23 @@ export default function App() {
           </div>
 
           {/* ヘルスインジケーター */}
-          {healthChecked && (
-            <div className="health-badges">
-              <div className={`health-badge ${health?.ollama?.connected ? 'badge-ok' : 'badge-ng'}`}>
-                <span className={`dot ${health?.ollama?.connected ? 'dot-ok' : 'dot-ng'}`} />
-                Ollama {health?.ollama?.connected ? `(${health.ollama.model_count}モデル)` : 'オフライン'}
+          <div className="header-status-area">
+            {healthChecked && (
+              <div className="health-badges">
+                <div className={`health-badge ${health?.ollama?.connected ? 'badge-ok' : 'badge-ng'}`}>
+                  <span className={`dot ${health?.ollama?.connected ? 'dot-ok' : 'dot-ng'}`} />
+                  Ollama {health?.ollama?.connected ? `(${health.ollama.model_count}モデル)` : 'オフライン'}
+                </div>
+                <div className={`health-badge ${health?.midi_server?.connected ? 'badge-ok' : 'badge-warn'}`}>
+                  <span className={`dot ${health?.midi_server?.connected ? 'dot-ok' : 'dot-warn'}`} />
+                  MIDIサーバー {health?.midi_server?.connected ? 'OK' : '未起動'}
+                </div>
+                <button className="status-reset-btn" onClick={checkSystemStatus} title="接続ステータスを再チェック">
+                  🔄 再チェック
+                </button>
               </div>
-              <div className={`health-badge ${health?.midi_server?.connected ? 'badge-ok' : 'badge-warn'}`}>
-                <span className={`dot ${health?.midi_server?.connected ? 'dot-ok' : 'dot-warn'}`} />
-                MIDIサーバー {health?.midi_server?.connected ? 'OK' : '未起動'}
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </header>
 

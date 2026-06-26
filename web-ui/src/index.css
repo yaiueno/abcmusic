@@ -168,6 +168,30 @@ body {
 .dot-ok   { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
 .dot-ng   { background: #f87171; }
 .dot-warn { background: #fbbf24; }
+
+.status-reset-btn {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-base);
+  font-size: 0.7rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  font-family: var(--font-sans);
+  font-weight: 500;
+}
+.status-reset-btn:hover {
+  background: var(--bg-hover);
+  border-color: rgba(255,255,255,0.25);
+  color: var(--cyan);
+}
+.status-reset-btn:active {
+  transform: scale(0.95);
+}
 .dot-ping { width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); display: inline-block; animation: ping 1.5s ease-in-out infinite; }
 
 /* ===================================================================
