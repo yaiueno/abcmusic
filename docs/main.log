@@ -1,4 +1,4 @@
-This is e-upTeX, Version 3.141592653-p4.1.2-u2.00-250202-2.6 (utf8.sjis) (TeX Live 2025) (preloaded format=platex 2025.11.27)  26 JUN 2026 15:05
+This is e-upTeX, Version 3.141592653-p4.1.2-u2.00-250202-2.6 (utf8.sjis) (TeX Live 2025) (preloaded format=platex 2025.11.27)  26 JUN 2026 16:00
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1652,23 +1652,16 @@ pLaTeX2e <2023-02-14>+1, based on
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
-
-
-Package rerunfilecheck Warning: File `main.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `main.out':
-(rerunfilecheck)             Before: 3530D56876EBD623E970318506F6C597;8102
-(rerunfilecheck)             After:  D84F71BC28F8B8F9AAF26A71A7CF9C2E;7962.
+Package rerunfilecheck Info: File `main.out' has not changed.
+(rerunfilecheck)             Checksum: D84F71BC28F8B8F9AAF26A71A7CF9C2E;7962.
  ) 
 Here is how much of TeX's memory you used:
- 45274 strings out of 473836
- 1069494 string characters out of 5734521
- 1797649 words of memory out of 5000000
- 67791 multiletter control sequences out of 15000+600000
+ 45275 strings out of 473836
+ 1069502 string characters out of 5734521
+ 1799649 words of memory out of 5000000
+ 67792 multiletter control sequences out of 15000+600000
  647436 words of font info for 140 fonts, out of 8000000 for 9000
  929 hyphenation exceptions out of 8191
  85i,13n,103p,850b,1431s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on main.dvi (20 pages, 318380 bytes).
+Output written on main.dvi (20 pages, 317772 bytes).

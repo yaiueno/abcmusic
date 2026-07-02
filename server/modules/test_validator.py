@@ -104,3 +104,28 @@ E2 | C D E F | G3 A | G2 E2 | C4 |"""
 print("Test 6 (Upbeat/Pickup Measure OK):", abc_validator.check_all(abc_upbeat))
 
 
+# 7. 和音を含む正しいABC (L:1/8 基準で 各小節 4拍、和音が [CEG]4 のように記述されている)
+abc_chords = """X:1
+T:Chords Test
+M:4/4
+L:1/8
+Q:120
+K:C
+|: [CEG]4 E2 G2 | [FAc]4 A2 c2 | [GBd]3 d B2 G2 | [cEG]8 :|"""
+
+print("Test 7 (Chords OK):", abc_validator.check_all(abc_chords))
+
+
+# 8. ギターコードシンボルと和音を含む正しいABC
+abc_chords_with_symbols = """X:1
+T:Chords and Symbols Test
+M:4/4
+L:1/8
+Q:120
+K:C
+|: "C" [CEG]4 E2 G2 | "F" [FAc]4 A2 c2 | "G" [GBd]2 B2 G2 d2 | "C" [cEG]8 :|"""
+
+print("Test 8 (Chords with Symbols OK):", abc_validator.check_all(abc_chords_with_symbols))
+
+
+

@@ -20,12 +20,24 @@ def check_format(abc: str) -> tuple[bool, str]:
 
 def check_character(abc: str) -> tuple[bool, str]:
     """② 使用文字チェックフィルタ 訂正版"""
+    music_lines = []
+    for line in abc.splitlines():
+        # 行頭が英文字1文字＋コロンで始まる場合はヘッダー行（または歌詞行など）とみなして除外
+        if re.match(r'^[A-Za-z]:', line.strip()):
+            continue
+        # コメント行を除外
+        if line.strip().startswith("%"):
+            continue
+        music_lines.append(line)
+
+    music_content = "\n".join(music_lines)
+
     pattern = (
         r'^[A-Za-z0-9'
         r'\|\[\]:,_\'"/=\^\-\+\s\n'
         r'<>!().%]*$'
     )
-    if re.fullmatch(pattern, abc):
+    if re.fullmatch(pattern, music_content):
         return True, "OK"
     return False, "ABC記法で使用できない文字があります"
 
@@ -113,14 +125,16 @@ def check_measure(abc: str) -> tuple[bool, str]:
         # 行頭が英文字1文字＋コロンで始まる場合はヘッダー行（または歌詞行など）とみなして除外
         if re.match(r'^[A-Za-z]:', line.strip()):
             continue
-        music.append(line)
+        # インラインコメントを除外
+        line_clean = re.sub(r'%.*', '', line)
+        music.append(line_clean)
 
     music = "".join(music)
     bars = music.split("|")
 
-    # 音符にマッチする正規表現 (休符 z も含む)
+    # 音符および和音にマッチする正規表現 (休符 z も含む)
     pattern = re.compile(
-        r'[\^_=]*[A-Ga-gzZ][,\']*(\d+(/\d+)?|/\d*)?'
+        r'(?:\[[^\]]+\]|[\^_=]*[A-Ga-gzZ][,\']*)(\d+(/\d+)?|/\d*)?'
     )
 
     factor = get_l_factor(abc)
@@ -128,8 +142,10 @@ def check_measure(abc: str) -> tuple[bool, str]:
     measure_index = 0
 
     for bar in bars:
-        # 小節の両端の空白や、反復記号などの装飾文字を除外
-        bar_clean = bar.replace(":", "").replace("[", "").replace("]", "").strip()
+        # ダブルクォーテーションで囲まれたギターコード名（例: "C", "Am"）を除去
+        bar_clean = re.sub(r'"[^"]*"', '', bar)
+        # 小節の両端の空白や、反復記号などの装飾文字を除外（和音のブラケット [] はトークン検出のため残す）
+        bar_clean = bar_clean.replace(":", "").strip()
         # 小節線のみや空の小節、終止線などはスキップ
         if not bar_clean or bar_clean in ["]", "[", "::", "||", "|"]:
             continue
